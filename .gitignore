@@ -1,0 +1,19 @@
+.gradle
+/local.properties
+/.idea/
+*.iml
+.DS_Store
+build/
+/artifacts
+/captures
+/gradle/local.properties
+/docs
+/torque-output*
+
+# Share code style.
+!.idea/codeStyleSettings.xml
+
+# Html viewer rules
+node_modules/
+npm-debug.log*
+/test/
