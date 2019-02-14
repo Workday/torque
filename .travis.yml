@@ -1,0 +1,20 @@
+language: shell
+
+# We use Docker → we need sudo.
+sudo: required
+
+services:
+  - docker
+
+script:
+  - ci/build.sh
+
+deploy:
+  - provider: script
+    script: PUBLISH=true ci/build.sh
+    skip_cleanup: true
+    on:
+      tags: true
+
+notifications:
+  email: false
