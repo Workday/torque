@@ -134,14 +134,14 @@ class TestRunFactory {
         if (args.testFilesPullDeviceDirectory.isEmpty() || args.testFilesPullHostDirectory.isEmpty()) {
             return
         }
-        val passedTestResults = deviceTestsResults.filter { it.status is AdbDeviceTestResult.Status.Passed }
-        if (passedTestResults.isEmpty()) {
+        val completedTestResults = deviceTestsResults.filter { it.status !is AdbDeviceTestResult.Status.Ignored }
+        if (completedTestResults.isEmpty()) {
             return
         }
 
         launch {
             val pullFileTimeout = Timeout(args.installTimeoutSeconds, TimeUnit.SECONDS)
-            passedTestResults
+            completedTestResults
                     .map { TestDetails(it.className, it.testName) }
                     .forEach { testDetails: TestDetails ->
                         filePuller.pullTestFolder(args.testFilesPullDeviceDirectory,

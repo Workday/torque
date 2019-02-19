@@ -69,7 +69,10 @@ class TestRunFactorySpec : Spek(
             }
         }
 
-        given("A single passed+failed test sequence") {
+        given("A single passed+ignored+failed test sequence") {
+            val testChunkResults = listOf(createPassedTest(adbDevice),
+                                          createIgnoredTest(adbDevice),
+                                          createFailedTest(adbDevice))
             val testChunkRunner by memoized {
                 mockk<TestChunkRunner> {
                     coEvery { run(args = any(), testChunk = any()) } returnsMany listOf(failedTestChunkResults)
@@ -80,7 +83,7 @@ class TestRunFactorySpec : Spek(
                     .map { TestDetails(it.className, it.testName) }
 
             given("defined test files folders") {
-                it("It pulls test files only on passed tests") {
+                it("It pulls test files only on non-ignored tests") {
                     val args = Args().apply {
                         appApkPath = "somePath"
                         testFilesPullDeviceDirectory = "somePath"
@@ -181,4 +184,8 @@ private fun createFailedTest(adbDevice: AdbDevice): AdbDeviceTestResult {
 
 private fun createPassedTest(adbDevice: AdbDevice): AdbDeviceTestResult {
     return AdbDeviceTestResult(adbDevice, "someClass", "someTest", AdbDeviceTestResult.Status.Passed, 1, mockk())
+}
+
+private fun createIgnoredTest(adbDevice: AdbDevice): AdbDeviceTestResult {
+    return AdbDeviceTestResult(adbDevice, "someClass", "someTest", AdbDeviceTestResult.Status.Ignored("stackTrace"), 1, mockk())
 }
