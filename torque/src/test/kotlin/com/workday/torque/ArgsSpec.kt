@@ -172,4 +172,26 @@ class ArgsSpec : Spek(
             assertThat(args.timeoutMinutes).isEqualTo(90L)
         }
     }
+
+    context("parse args with explicitly passed --test-files-pull-device-directory") {
+
+        val args by memoized {
+            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--test-files-pull-device-directory", "deviceDir"))
+        }
+
+        it("parses --test-files-pull-device-directory correctly") {
+            assertThat(args.testFilesPullDeviceDirectory).isEqualTo("deviceDir")
+        }
+    }
+
+    context("parse args with passed --test-files-pull-host-directory") {
+
+        val args by memoized {
+            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--test-files-pull-host-directory", "hostDir"))
+        }
+
+        it("parses --test-files-pull-host-directory correctly") {
+            assertThat(args.testFilesPullHostDirectory).isEqualTo("hostDir")
+        }
+    }
 })

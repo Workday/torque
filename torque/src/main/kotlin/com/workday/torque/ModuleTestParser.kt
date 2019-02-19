@@ -46,7 +46,7 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
         val patterns = regexStrings.map { it.toPattern() }
         return filter { testMethod ->
             patterns.any { pattern ->
-                pattern.matcher(testMethod.getTestClass()).matches()
+                pattern.matcher(testMethod.getTestClassName()).matches()
             }
         }
     }

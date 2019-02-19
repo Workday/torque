@@ -4,11 +4,13 @@ import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestPool
 import io.reactivex.Single
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
 import kotlinx.coroutines.withTimeout
@@ -27,6 +29,7 @@ class TestRunFactory {
             ),
             logcatRecorder: LogcatRecorder = LogcatRecorder(logcatFileIO),
             installer: Installer = Installer(adbDevice),
+            filePuller: FilePuller = FilePuller(adbDevice),
             testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer)
     ): Single<AdbDeviceTestSession> {
         val testSession = AdbDeviceTestSession(adbDevice = adbDevice,
@@ -44,6 +47,7 @@ class TestRunFactory {
                         val chunk = testPool.getNextTestChunk()
                         if (chunk != null) {
                             val deviceTestsResults = adbDevice.runTestChunkWithRetry(args, logcatFileIO, chunk, testChunkRunner)
+                            pullChunkTestFiles(args, filePuller, deviceTestsResults)
                             testSession.apply {
                                 testResults.addAll(deviceTestsResults)
                                 passedCount += deviceTestsResults.count { it.status is AdbDeviceTestResult.Status.Passed }
@@ -121,5 +125,30 @@ class TestRunFactory {
                             durationMillis = timeoutMillis,
                             logcatFile = logcatFileIO.getLogcatFileForTest(testDetails))
                 }
+    }
+
+    private fun CoroutineScope.pullChunkTestFiles(
+            args: Args, filePuller: FilePuller,
+            deviceTestsResults: List<AdbDeviceTestResult>
+    ) {
+        if (args.testFilesPullDeviceDirectory.isEmpty() || args.testFilesPullHostDirectory.isEmpty()) {
+            return
+        }
+        val completedTestResults = deviceTestsResults.filter { it.status !is AdbDeviceTestResult.Status.Ignored }
+        if (completedTestResults.isEmpty()) {
+            return
+        }
+
+        launch {
+            val pullFileTimeout = Timeout(args.installTimeoutSeconds, TimeUnit.SECONDS)
+            completedTestResults
+                    .map { TestDetails(it.className, it.testName) }
+                    .forEach { testDetails: TestDetails ->
+                        filePuller.pullTestFolder(args.testFilesPullDeviceDirectory,
+                                                  args.testFilesPullHostDirectory,
+                                                  testDetails,
+                                                  pullFileTimeout).await()
+                    }
+        }
     }
 }

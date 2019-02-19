@@ -3,6 +3,10 @@ package com.workday.torque
 import com.linkedin.dex.parser.TestMethod
 
 fun TestMethod.getTestClass(): String {
+    return testName.substringBeforeLast('#')
+}
+
+fun TestMethod.getTestClassName(): String {
     return testName.substringAfterLast('.').substringBeforeLast('#')
 }
 

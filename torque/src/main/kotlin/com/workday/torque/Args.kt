@@ -108,7 +108,21 @@ data class Args(
                 names = ["--timeout"],
                 description = "Timeout for the entire Torque run in minutes. If omitted, defaults to $DEFAULT_TORQUE_TIMEOUT_MINUTES minutes."
         )
-        var timeoutMinutes: Long = DEFAULT_TORQUE_TIMEOUT_MINUTES
+        var timeoutMinutes: Long = DEFAULT_TORQUE_TIMEOUT_MINUTES,
+
+        @Parameter(
+                names = ["--test-files-pull-device-directory"],
+                description = "Directory on device to pull test files from. Setting this directory and --file-pull-host-directory will enable recursive pulling of the folders." +
+                        "This folder would have the structure of deviceDirectory\\TestClass\\TestMethod for all tests"
+        )
+        var testFilesPullDeviceDirectory: String = "",
+
+        @Parameter(
+                names = ["--test-files-pull-host-directory"],
+                description = "Directory on the Torque run host machine to pull test files to. Setting this and --file-pull-device-directory will enable pulling of the folders." +
+                        "This folder would have the structure of hostDirectory\\TestClass\\TestMethod for all tests"
+        )
+        var testFilesPullHostDirectory: String = ""
 )
 
 fun parseArgs(rawArgs: Array<String>): Args {

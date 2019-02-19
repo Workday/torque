@@ -20,9 +20,15 @@ class TestRunFactorySpec : Spek(
         val adbDevice = AdbDevice("id", "model", online = true)
         val logcatFileIO = mockk<LogcatFileIO>(relaxed = true)
         val logcatRecorder = mockk<LogcatRecorder>(relaxed = true)
+        val filePuller by memoized {
+            mockk<FilePuller> {
+                every { pullTestFolder(any(), any(), any(), any()) } returns Completable.complete()
+            }
+        }
         val installer = mockk<Installer> {
             every { installApk(pathToApk = any(), args = any()) } returns Completable.complete()
         }
+
         val crashedTestChunkResults = createCrashedTests(adbDevice)
         val failedTestChunkResults = listOf(createPassedTest(adbDevice),
                                             createFailedTest(adbDevice),
@@ -50,7 +56,7 @@ class TestRunFactorySpec : Spek(
                 val args = Args().apply {
                     appApkPath = "somePath"
                 }
-                TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, testChunkRunner)
+                TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner)
                         .test()
                         .await()
 
@@ -59,6 +65,57 @@ class TestRunFactorySpec : Spek(
                     installer.installApk(any(), any())
                     testChunkRunner.run(any(), any())
                     logcatRecorder.stop()
+                }
+            }
+        }
+
+        given("A single passed+ignored+failed test sequence") {
+            val testChunkResults = listOf(createPassedTest(adbDevice),
+                                          createIgnoredTest(adbDevice),
+                                          createFailedTest(adbDevice))
+            val testChunkRunner by memoized {
+                mockk<TestChunkRunner> {
+                    coEvery { run(args = any(), testChunk = any()) } returnsMany listOf(failedTestChunkResults)
+                }
+            }
+            val passedTestDetails = failedTestChunkResults
+                    .filter { it.status is AdbDeviceTestResult.Status.Passed }
+                    .map { TestDetails(it.className, it.testName) }
+
+            given("defined test files folders") {
+                it("It pulls test files only on non-ignored tests") {
+                    val args = Args().apply {
+                        appApkPath = "somePath"
+                        testFilesPullDeviceDirectory = "somePath"
+                        testFilesPullHostDirectory = "somePath"
+                    }
+                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner)
+                            .test()
+                            .await()
+
+                    coVerify(ordering = Ordering.ALL) {
+                        passedTestDetails.forEach {
+                            filePuller.pullTestFolder(any(), any(), eq(it), any())
+                        }
+                    }
+                }
+            }
+
+            given("no defined test files folders") {
+                it("It does not pull test files") {
+                    val args = Args().apply {
+                        appApkPath = "somePath"
+                    }
+
+                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner)
+                            .test()
+                            .await()
+
+                    coVerify(ordering = Ordering.UNORDERED, inverse = true) {
+                        passedTestDetails.forEach {
+                            filePuller.pullTestFolder(any(), any(), eq(it), any())
+                        }
+                    }
                 }
             }
         }
@@ -79,7 +136,7 @@ class TestRunFactorySpec : Spek(
                 }
 
                 it("Retries until success and outputs test results with all passed tests") {
-                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, testChunkRunner)
+                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner)
                             .test()
                             .await()
                             .assertValue { it.testResults.containsAll(passedTestChunkResults) }
@@ -92,7 +149,7 @@ class TestRunFactorySpec : Spek(
                 }
 
                 it("Retries until max retries and outputs test results with failed tests") {
-                    TestRunFactory().runTestSession(adbDevice,args, testPool, logcatFileIO, logcatRecorder, installer, testChunkRunner)
+                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner)
                             .test()
                             .await()
                             .assertValue { it.testResults.containsAll(failedTestChunkResults) }
@@ -105,7 +162,7 @@ class TestRunFactorySpec : Spek(
                 }
 
                 it("Retries until max retries and outputs test results with failed crashed tests") {
-                    TestRunFactory().runTestSession(adbDevice,args, testPool, logcatFileIO, logcatRecorder, installer, testChunkRunner)
+                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner)
                             .test()
                             .await()
                             .assertValue { it.testResults.containsAll(crashedTestChunkResults) }
@@ -127,4 +184,8 @@ private fun createFailedTest(adbDevice: AdbDevice): AdbDeviceTestResult {
 
 private fun createPassedTest(adbDevice: AdbDevice): AdbDeviceTestResult {
     return AdbDeviceTestResult(adbDevice, "someClass", "someTest", AdbDeviceTestResult.Status.Passed, 1, mockk())
+}
+
+private fun createIgnoredTest(adbDevice: AdbDevice): AdbDeviceTestResult {
+    return AdbDeviceTestResult(adbDevice, "someClass", "someTest", AdbDeviceTestResult.Status.Ignored("stackTrace"), 1, mockk())
 }
