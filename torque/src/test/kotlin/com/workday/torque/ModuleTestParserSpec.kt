@@ -1,6 +1,7 @@
 package com.workday.torque
 
 import com.linkedin.dex.parser.TestMethod
+import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestModule
 import com.workday.torque.pooling.TestModuleInfo
 import io.mockk.every
@@ -50,19 +51,23 @@ class ModuleTestParserSpec : Spek(
                 mediumTest,
                 flakyMediumTest,
                 ignoredFlakyMediumTest)
-        val testPackage = TestPackage.Valid("com.company.mymodule.test")
+        val testPackage = ApkPackage.Valid("com.company.mymodule.test")
+        val targetPackage = ApkPackage.Valid("test.test.myapplication")
         val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
         val apkTestParser = mockk<ApkTestParser> {
             every { getValidatedTestPackage(any()) } returns testPackage
+            every { getValidatedTargetPackage(any()) } returns targetPackage
             every { getValidatedTestRunner(any()) } returns testRunner
             every { getTests(any()) } returns testMethods
         }
+        val targetApkPath = "some_app_path"
         val testApkPath = "some_path"
-        val testModuleInfo = TestModuleInfo(testPackage, testRunner, testApkPath)
+        val testModuleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, targetApkPath))
 
         given("no Annotations and with default Ignore NotAnnotations") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
             }
 
             it("filters out Ignored tests only") {
@@ -79,6 +84,7 @@ class ModuleTestParserSpec : Spek(
         given("MediumTest Annotations and with default Ignore NotAnnotations") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
                 annotations = listOf("MediumTest")
             }
 
@@ -93,6 +99,7 @@ class ModuleTestParserSpec : Spek(
         given("MediumTest FlakyTest Annotations and with default Ignore NotAnnotations") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
                 annotations = listOf("MediumTest", "FlakyTest")
             }
 
@@ -107,6 +114,7 @@ class ModuleTestParserSpec : Spek(
         given("FlakyTest NotAnnotations") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
                 notAnnotations = listOf("FlakyTest")
             }
 
@@ -124,19 +132,23 @@ class ModuleTestParserSpec : Spek(
         val prefixSpecificTest = TestMethod("com.company.mymodule2.PrefixSpecificTest#someTestMethod", emptyList())
         val someOtherTest = TestMethod("com.company.myapp.SomeOtherTest#someTestMethod", emptyList())
         val testMethods = listOf(prefixSomeSpecificTest, prefixSpecificTest, someOtherTest)
-        val testPackage = TestPackage.Valid("com.company.myapp.test")
+        val testPackage = ApkPackage.Valid("com.company.myapp.test")
+        val targetPackage = ApkPackage.Valid("test.test.myapplication")
         val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
         val apkTestParser = mockk<ApkTestParser> {
             every { getValidatedTestPackage(any()) } returns testPackage
+            every { getValidatedTargetPackage(any()) } returns targetPackage
             every { getValidatedTestRunner(any()) } returns testRunner
             every { getTests(any()) } returns testMethods
         }
-        val testApkPath = "some_path"
-        val testModuleInfo = TestModuleInfo(testPackage, testRunner, testApkPath)
+        val targetApkPath = "some_app_path"
+        val testApkPath = "some_test_path"
+        val testModuleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, targetApkPath))
 
         given("no regex provided ") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
             }
 
             it("filters to all tests") {
@@ -150,6 +162,7 @@ class ModuleTestParserSpec : Spek(
         given("single regex string") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
                 testClassRegexes = listOf("(Prefix[a-zA-Z]*SpecificTest)+")
             }
 
@@ -164,6 +177,7 @@ class ModuleTestParserSpec : Spek(
         given("multiple regex strings") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
                 testClassRegexes = listOf("(PrefixSpecificTest)+", "(SomeOtherTest)+")
             }
 
@@ -194,19 +208,23 @@ class ModuleTestParserSpec : Spek(
                 mediumSpecificTest,
                 mediumOtherTest,
                 flakyMediumTest)
-        val testPackage = TestPackage.Valid("com.company.mymodule.test")
+        val testPackage = ApkPackage.Valid("com.company.mymodule.test")
+        val targetPackage = ApkPackage.Valid("test.test.myapplication")
         val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
         val apkTestParser = mockk<ApkTestParser> {
             every { getValidatedTestPackage(any()) } returns testPackage
+            every { getValidatedTargetPackage(any()) } returns targetPackage
             every { getValidatedTestRunner(any()) } returns testRunner
             every { getTests(any()) } returns testMethods
         }
-        val testApkPath = "some_path"
-        val testModuleInfo = TestModuleInfo(testPackage, testRunner, testApkPath)
+        val targetApkPath = "some_app_path"
+        val testApkPath = "some_test_path"
+        val testModuleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, targetApkPath))
 
         given("MediumTest Annotations, FlakyTest NotAnnotations and regex") {
             val args = Args().apply {
                 testApkPaths = listOf(testApkPath)
+                appApkPath = targetApkPath
                 annotations = listOf("MediumTest")
                 notAnnotations = listOf("FlakyTest")
                 testClassRegexes = listOf("[a-zA-Z]+SpecificTest")
@@ -223,12 +241,13 @@ class ModuleTestParserSpec : Spek(
 })
 
 private fun createExpectedTestModules(testApkPath: String, moduleCount: Int): List<TestModule> {
-    val testPackage = TestPackage.Valid("test.test.myapplication.test")
+    val testPackage = ApkPackage.Valid("test.test.myapplication.test")
+    val targetPackage = ApkPackage.Valid("test.test.myapplication")
     val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
     val testMethods = listOf(
             TestMethod("test.test.myapplication.ExampleInstrumentedTest#useAppContext",
                        listOf("dalvik.annotation.Throws", "org.junit.Test", "org.junit.runner.RunWith")
                       ))
-    val moduleInfo = TestModuleInfo(testPackage, testRunner, testApkPath)
+    val moduleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, ""))
     return MutableList(moduleCount) { TestModule(moduleInfo, testMethods) }
 }

@@ -40,9 +40,6 @@ class TestRunFactory {
                 block = {
                     testSession.startTimestampMillis = System.currentTimeMillis()
                     logcatRecorder.start()
-                    if (args.appApkPath.isNotEmpty()) {
-                        installer.installApk(args.appApkPath, args).await()
-                    }
                     do {
                         val chunk = testPool.getNextTestChunk()
                         if (chunk != null) {

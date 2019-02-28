@@ -1,6 +1,6 @@
 package com.workday.torque.pooling
 
-import com.workday.torque.TestPackage
+import com.workday.torque.ApkPackage
 import com.workday.torque.TestRunner
 import com.workday.torque.utils.createTestMethodsList
 import kotlinx.coroutines.CoroutineStart
@@ -19,12 +19,12 @@ class TestPoolSpec : Spek(
 {
 
     context("split modular tests into poolable chunks") {
-        val testPackage1 = TestPackage.Valid("com.company.mymodule.test")
+        val testPackage1 = ApkPackage.Valid("com.company.mymodule.test")
         val testRunner1 = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
-        val moduleInfo1 = TestModuleInfo(testPackage1, testRunner1, "")
-        val testPackage2 = TestPackage.Valid("com.company.myapp.debug.test")
+        val moduleInfo1 = TestModuleInfo(ModuleInfo(testPackage1, ""), testRunner1)
+        val testPackage2 = ApkPackage.Valid("com.company.myapp.debug.test")
         val testRunner2 = TestRunner.Valid("com.company.myapp.testrunner.AppApplicationRunner ")
-        val moduleInfo2 = TestModuleInfo(testPackage2, testRunner2, "")
+        val moduleInfo2 = TestModuleInfo(ModuleInfo(testPackage2, ""), testRunner2)
 
         given("pooledChunks from modules with tests count more than chunk size") {
             val testMethods1 = createTestMethodsList(37)

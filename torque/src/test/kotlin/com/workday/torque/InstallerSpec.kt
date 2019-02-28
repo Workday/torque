@@ -1,12 +1,14 @@
 package com.workday.torque
 
 import com.gojuno.commander.os.Notification
+import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestModuleInfo
 import com.workday.torque.utils.createTestMethodsList
 import io.mockk.every
 import io.mockk.mockk
 import io.reactivex.Observable
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.given
@@ -14,16 +16,19 @@ import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.junit.Assert.assertTrue
 import java.io.File
+import kotlin.test.assertFailsWith
 
 class InstallerSpec : Spek(
 {
     context("Installing apk") {
         val adbDevice by memoized { AdbDevice("id", "model", online = true) }
 
-        val testPackage = TestPackage.Valid("com.company.mymodule.test")
+        val testPackage = ApkPackage.Valid("com.company.mymodule.test")
+        val targetPackage = ApkPackage.Valid("test.test.myapplication")
         val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
-        val pathToApk = "test.apk"
-        val moduleInfo = TestModuleInfo(testPackage, testRunner, pathToApk)
+        val targetApkPath = "some_app_path"
+        val testApkPath = "some_test_path"
+        val moduleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, targetApkPath))
         val testChunk = TestChunk(0, moduleInfo, createTestMethodsList(5))
         val successfulInstallOutputFile = File("successful-install-output.txt")
         successfulInstallOutputFile.createNewFile()
@@ -45,12 +50,13 @@ class InstallerSpec : Spek(
             }
 
 
-            it("Adds installed package to installedPackages on AdbDevice") {
-                installer.ensureTestPackageInstalled(Args(), testChunk)
-                        .test()
-                        .await()
+            it("Adds installed packages to installedPackages on AdbDevice") {
+                runBlocking {
+                    installer.ensureTestPackageInstalled(Args(), testChunk)
+                }
 
                 assertTrue(adbDevice.installedPackages.contains(testPackage.value))
+                assertTrue(adbDevice.installedPackages.contains(targetPackage.value))
             }
         }
 
@@ -70,11 +76,13 @@ class InstallerSpec : Spek(
                 }
 
                 it("Retries until success and adds installed package to installedPackages on AdbDevice") {
-                    installer.ensureTestPackageInstalled(args, testChunk)
-                            .test()
-                            .await()
+
+                    runBlocking {
+                        installer.ensureTestPackageInstalled(args, testChunk)
+                    }
 
                     assertTrue(adbDevice.installedPackages.contains(testPackage.value))
+                    assertTrue(adbDevice.installedPackages.contains(targetPackage.value))
                 }
             }
 
@@ -84,9 +92,11 @@ class InstallerSpec : Spek(
                 }
 
                 it("Retries until max retries and errors out") {
-                    installer.ensureTestPackageInstalled(args, testChunk)
-                            .test()
-                            .assertError { it is IllegalStateException && it.message.equals("Apk install failed") }
+                    assertFailsWith(IllegalStateException::class, "Apk install failed") {
+                        runBlocking {
+                            installer.ensureTestPackageInstalled(args, testChunk)
+                        }
+                    }
                 }
             }
         }

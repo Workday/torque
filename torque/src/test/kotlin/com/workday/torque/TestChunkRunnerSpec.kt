@@ -1,13 +1,13 @@
 package com.workday.torque
 
 import com.gojuno.commander.os.Notification
+import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestModuleInfo
 import com.workday.torque.utils.createTestMethodsList
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.reactivex.Completable
 import io.reactivex.Observable
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.spek.api.Spek
@@ -24,11 +24,7 @@ class TestChunkRunnerSpec : Spek(
     context("Running a test chunk") {
         val adbDevice = mockk<AdbDevice>(relaxed = true)
         val logcatFileIO by memoized { mockk<LogcatFileIO>() }
-        val installer by memoized {
-            mockk<Installer> {
-                every { ensureTestPackageInstalled(any(), any()) } returns Completable.complete()
-            }
-        }
+        val installer = mockk<Installer>(relaxed = true)
         val processRunner by memoized { mockk<ProcessRunner>() }
         val instrumentationReader by memoized { mockk<InstrumentationReader>() }
         val testChunkRunner by memoized {
@@ -40,9 +36,9 @@ class TestChunkRunnerSpec : Spek(
         }
 
         given("a chunk of 3 tests") {
-            val testPackage = TestPackage.Valid("com.company.mymodule.test")
+            val testPackage = ApkPackage.Valid("com.company.mymodule.test")
             val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
-            val moduleInfo = TestModuleInfo(testPackage, testRunner, "")
+            val moduleInfo = TestModuleInfo(ModuleInfo(testPackage, ""), testRunner)
             val testChunk by memoized {
                 TestChunk(index = 0,
                           testModuleInfo = moduleInfo,

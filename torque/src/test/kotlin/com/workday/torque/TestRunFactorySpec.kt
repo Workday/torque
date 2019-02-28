@@ -25,9 +25,7 @@ class TestRunFactorySpec : Spek(
                 every { pullTestFolder(any(), any(), any(), any()) } returns Completable.complete()
             }
         }
-        val installer = mockk<Installer> {
-            every { installApk(pathToApk = any(), args = any()) } returns Completable.complete()
-        }
+        val installer = mockk<Installer>(relaxed = true)
 
         val crashedTestChunkResults = createCrashedTests(adbDevice)
         val failedTestChunkResults = listOf(createPassedTest(adbDevice),
@@ -62,7 +60,6 @@ class TestRunFactorySpec : Spek(
 
                 coVerify(ordering = Ordering.SEQUENCE) {
                     logcatRecorder.start()
-                    installer.installApk(any(), any())
                     testChunkRunner.run(any(), any())
                     logcatRecorder.stop()
                 }

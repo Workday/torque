@@ -1,15 +1,18 @@
 package com.workday.torque.pooling
 
 import com.linkedin.dex.parser.TestMethod
-import com.workday.torque.TestPackage
+import com.workday.torque.ApkPackage
 import com.workday.torque.TestRunner
 import java.util.LinkedList
 
 private const val TEST_CHUNK_SIZE = 1
 
-data class TestModuleInfo(val testPackage: TestPackage.Valid,
+data class TestModuleInfo(val moduleInfo: ModuleInfo,
                           val testRunner: TestRunner.Valid,
-                          val pathToApk: String)
+                          val appModuleInfo: ModuleInfo? = null)
+
+data class ModuleInfo(val apkPackage: ApkPackage.Valid,
+                      val pathToApk: String)
 
 data class TestModule(val testModuleInfo: TestModuleInfo,
                       val testMethods: List<TestMethod>)

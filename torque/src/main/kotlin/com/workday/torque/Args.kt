@@ -122,7 +122,14 @@ data class Args(
                 description = "Directory on the Torque run host machine to pull test files to. Setting this and --file-pull-device-directory will enable pulling of the folders." +
                         "This folder would have the structure of hostDirectory\\TestClass\\TestMethod for all tests"
         )
-        var testFilesPullHostDirectory: String = ""
+        var testFilesPullHostDirectory: String = "",
+
+        @Parameter(
+                names = ["--enforce-single-module"],
+                description = "Always only have one module's test apk and app apk installed per device. Uninstalls the current test modules and app modules when starting a different test module." +
+                        "This is required when multiple apks contain the same intent filters due to AndroidManifest.xml merging."
+        )
+        var enforceSingleModule: Boolean = false
 )
 
 fun parseArgs(rawArgs: Array<String>): Args {

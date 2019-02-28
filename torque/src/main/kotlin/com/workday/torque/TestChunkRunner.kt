@@ -15,11 +15,9 @@ class TestChunkRunner(
 ) {
     suspend fun run(args: Args, testChunk: TestChunk): List<AdbDeviceTestResult> {
         return try {
+            adbDevice.log("Starting tests...")
             installer.ensureTestPackageInstalled(args, testChunk)
-                    .andThen(runAndParseTests(args.chunkTimeoutSeconds, testChunk))
-                    .doOnSubscribe { adbDevice.log("Starting tests...") }
-                    .doOnError { adbDevice.log("Error during tests run: $it") }
-                    .await()
+            runAndParseTests(args.chunkTimeoutSeconds, testChunk).await()
         } catch (e: Exception) {
             adbDevice.log("TestChunk run crashed with exception: ${e.message}")
             createCrashedAdbDeviceTestResults(testChunk, e)
@@ -27,7 +25,7 @@ class TestChunkRunner(
     }
 
     private fun runAndParseTests(chunkTimeoutSeconds: Long, testChunk: TestChunk): Single<List<AdbDeviceTestResult>> {
-        val testPackageName = testChunk.testModuleInfo.testPackage.value
+        val testPackageName = testChunk.testModuleInfo.moduleInfo.apkPackage.value
         val testRunnerClass = testChunk.testModuleInfo.testRunner.value
         val testMethodsArgs = "-e class " + testChunk.testMethods.joinToString(",") { it.testName }
         val timeout = Timeout(chunkTimeoutSeconds.toInt(), TimeUnit.SECONDS)
