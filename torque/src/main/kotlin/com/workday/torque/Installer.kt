@@ -21,21 +21,20 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
     }
 
     private suspend fun installModuleApks(testModuleInfo: TestModuleInfo, args: Args) {
-        val targetModuleInfo = testModuleInfo.appModuleInfo
-
-        if (args.enforceSingleModule) {
+        if (args.uninstallApkAfterTest) {
             adbDevice.installedPackages.forEach { modulePackage ->
-                uninstallAndUpdateInstalledPackages(modulePackage, args)
+                uninstallPackage(modulePackage, args)
             }
         }
 
-        installAndUpdateInstalledPackages(testModuleInfo.moduleInfo, args)
+        installPackage(testModuleInfo.moduleInfo, args)
+        val targetModuleInfo = testModuleInfo.appModuleInfo
         if (targetModuleInfo != null) {
-            installAndUpdateInstalledPackages(targetModuleInfo, args)
+            installPackage(targetModuleInfo, args)
         }
     }
 
-    private suspend fun uninstallAndUpdateInstalledPackages(modulePackage: String, args: Args) {
+    private suspend fun uninstallPackage(modulePackage: String, args: Args) {
         uninstallApk(modulePackage, args).await()
         adbDevice.installedPackages.remove(modulePackage)
     }
@@ -50,8 +49,8 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
                     adbUninstallApk(modulePackage,
                                     installTimeout).map { it to startTimeMillis }
                 }
-                .map { (exit, startTimeMillis) ->
-                    val success = exit
+                .map { (exitNotification, startTimeMillis) ->
+                    val success = exitNotification
                             .preprocessOutput()
                             .filter { it.isNotEmpty() }
                             .firstOrNull { it.equals("Success", ignoreCase = true) } != null
@@ -82,7 +81,7 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
                 .ofType(Notification.Exit::class.java)
     }
 
-    private suspend fun installAndUpdateInstalledPackages(moduleInfo: ModuleInfo, args: Args) {
+    private suspend fun installPackage(moduleInfo: ModuleInfo, args: Args) {
         installApk(moduleInfo.pathToApk, args).await()
         adbDevice.installedPackages.add(moduleInfo.apkPackage.value)
     }
@@ -93,8 +92,8 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
         return Observable
                 .fromCallable { System.currentTimeMillis() }
                 .flatMap { startTimeMillis -> adbInstallApk(pathToApk, installTimeout).map { it to startTimeMillis } }
-                .map { (exit, startTimeMillis) ->
-                    val success = exit
+                .map { (exitNotification, startTimeMillis) ->
+                    val success = exitNotification
                             .preprocessOutput()
                             .filter { it.isNotEmpty() }
                             .firstOrNull { it.equals("Success", ignoreCase = true) } != null

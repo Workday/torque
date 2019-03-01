@@ -125,11 +125,11 @@ data class Args(
         var testFilesPullHostDirectory: String = "",
 
         @Parameter(
-                names = ["--enforce-single-module"],
+                names = ["--uninstall-apk-after-test"],
                 description = "Always only have one module's test apk and app apk installed per device. Uninstalls the current test modules and app modules when starting a different test module." +
                         "This is required when multiple apks contain the same intent filters due to AndroidManifest.xml merging."
         )
-        var enforceSingleModule: Boolean = false
+        var uninstallApkAfterTest: Boolean = false
 )
 
 fun parseArgs(rawArgs: Array<String>): Args {

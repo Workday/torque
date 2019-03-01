@@ -14,6 +14,7 @@ import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import java.io.File
 import kotlin.test.assertFailsWith
@@ -95,6 +96,56 @@ class InstallerSpec : Spek(
                     assertFailsWith(IllegalStateException::class, "Apk install failed") {
                         runBlocking {
                             installer.ensureTestPackageInstalled(args, testChunk)
+                        }
+                    }
+                }
+            }
+        }
+
+        given("A library test module and a twice failed then succeeded uninstall sequence") {
+            val previousInstalledApkPackageName = "oldPackage"
+            val libraryTestModuleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner)
+            val libraryTestChunk = TestChunk(0, libraryTestModuleInfo, createTestMethodsList(5))
+            val installer by memoized {
+                val processRunner = mockk<ProcessRunner> {
+                    every {
+                        runAdb(listOf("-s", adbDevice.id, "install", "-r", "-g", testApkPath), any(), any(), any(), any(), any(), any())
+                    } returnsMany listOf(successfulNotification, successfulNotification, successfulNotification)
+                    every {
+                        runAdb(listOf("-s", adbDevice.id, "uninstall", previousInstalledApkPackageName), any(), any(), any(), any(), any(), any())
+                    } returnsMany listOf(failedNotification, failedNotification, successfulNotification)
+                }
+                Installer(adbDevice, processRunner)
+            }
+
+            on("Max retry count higher than failed occurrences") {
+                val args = Args().apply {
+                    retriesInstallPerApk = 2
+                    uninstallApkAfterTest = true
+                }
+                adbDevice.installedPackages.add(previousInstalledApkPackageName)
+
+                it("Retries until success and removes installed packages in installedPackages on AdbDevice") {
+
+                    runBlocking {
+                        installer.ensureTestPackageInstalled(args, libraryTestChunk)
+                    }
+
+                    assertFalse(adbDevice.installedPackages.contains(previousInstalledApkPackageName))
+                }
+            }
+
+            on("Max retry count lower than failed occurrences") {
+                val args = Args().apply {
+                    retriesInstallPerApk = 1
+                    uninstallApkAfterTest = true
+                }
+                adbDevice.installedPackages.add(previousInstalledApkPackageName)
+
+                it("Retries until max retries and errors out") {
+                    assertFailsWith(IllegalStateException::class, "Apk uninstall failed") {
+                        runBlocking {
+                            installer.ensureTestPackageInstalled(args, libraryTestChunk)
                         }
                     }
                 }

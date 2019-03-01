@@ -54,11 +54,16 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
         val testPackage = apkTestParser.getValidatedTestPackage(testApkPath)
         val targetPackage = apkTestParser.getValidatedTargetPackage(testApkPath)
         val testRunner = apkTestParser.getValidatedTestRunner(testApkPath)
-        return if (testPackage != targetPackage) {
+        return if (isAppTestApk(testPackage, targetPackage)) {
             val appModuleInfo = ModuleInfo(targetPackage, args.appApkPath)
             TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, appModuleInfo)
         } else {
             TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner)
         }
     }
+
+    private fun isAppTestApk(
+            testPackage: ApkPackage.Valid,
+            targetPackage: ApkPackage.Valid
+    ) = testPackage != targetPackage
 }
