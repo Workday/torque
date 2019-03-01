@@ -1,20 +1,22 @@
-language: shell
-
-# We use Docker → we need sudo.
-sudo: required
-
-services:
-  - docker
-
+language: java
+install: true
 script:
-  - ci/build.sh
+#  https://issues.sonatype.org/browse/OSSRH-38347 Change to auto release or switch repository (jfrog etc.)
+#- "./gradlew clean build uploadArchives -s -PNEXUS_USERNAME=$NEXUS_USERNAME -PNEXUS_PASSWORD=$NEXUS_PASSWORD"
+- "./gradlew clean build -s"
+
+before_deploy:
+- echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
+- echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 
 deploy:
-  - provider: script
-    script: PUBLISH=true ci/build.sh
-    skip_cleanup: true
-    on:
-      tags: true
-
-notifications:
-  email: false
+  provider: releases
+  api_key:
+    secure: DpNBIvTfTo1Ws+H+k4jIuUy6WBWrsjoysndwDZMG9YL+tmm0qRD9nonCTSp4GhsAa/fn1zgh6xAwLsVumh7nnhuEBhKLgJ5KmCL7Xqn6KQ11VNfL0WUVm5lKFvIt8qUzTvL2gysDVEKACOnsaB2pQKiZkop82X0GhweoluUD7jPvEezKSAl+zenKnAniIFutTmSfL6QGELQDMtRC9izR90u6nFKPbCWuLC+SPGHAtCgWci8ILve2Fu3+dkhVRsDz5j61de4/Ywd8mhNZsNuVelRhF1fuBvNTlvZ5yrTAcOsGK++cOLplSCDDknLD4KJW0g+IgesWLMeKiksLHk7s4q3P71zdXKgaJWWYHNT31bIKiw98oWIoys/br+sEBNwIH7uj9+l5QDV7b2rkw3XZJ+6WawVSRU3JPdjQgunlQ5rYF7Yy7Q0gnCC1L4k1zdKRA0sOwk3vOJ+MnfLxS76JpBTUx8HT/ydCyR1NFLuSx0iXBlU5/2UbWYczlhzlxKS6d9Lapd/lP+41bT/OftVB9CQ6//cGR7RdHyZqXITifab8yI/n5w/ByOj91S/rTnm1itMAzN34uj/46BcEFVEZCu449KOm1/xT9EwPSgPjlk/KcY5Hz+iHY+VNd7SYEcG50JqH+e5CFOAW/XlcuipraQ8w8VoeNIR0ho2EyxSmvX0=
+  file_glob: true
+  file:
+  - torque-runner/build/libs/torque-runner-*.jar
+  skip_cleanup: true
+  on:
+    repo: Workday/torque
+    tags: true
