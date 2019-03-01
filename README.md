@@ -1,5 +1,7 @@
 ## Torque — Reactive Android instrumentation test orchestrator with multi-library-modules-testing and test pooling/grouping support.
 
+[![Build Status](https://travis-ci.org/Workday/toque.svg?branch=master)](https://travis-ci.org/Workday/torque)
+
 Torque is a test orchestrator that aims to support the following features:
 * Support running [Android Library Module](https://developer.android.com/studio/projects/android-library) test Apks. 
 * Parallel test execution on multiple emulators/devices with **pooled** test chunking support.
@@ -54,10 +56,9 @@ devices available to leverage the pooling.
 
 ## Usage
 
-Torque is shipped as jar for now, you can run it directly (you need JVM 1.8+): `java -jar torque-latest-version.jar [options]`.
-or
-With the Gradle plugin use `torque-gradle-plugin-latest-version.jar`.
-
+Torque can be ran directly (you need JVM 1.8+): `java -jar torque-runner-$torque_version.jar [options]`.  
+or  
+With the Gradle plugin
 
 #### Supported options
 
@@ -81,15 +82,19 @@ java -jar torque-latest-version.jar \
 ```
 
 ##### Example (Gradle plugin)
-In the project's `build.gradle`
-```
+Add the following lines to your project's `build.gradle` file, replacing `$torque_version` with latest version from Maven Central.
+```gradle
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    implementation files('../torque-gradle-plugin.jar')
-    implementation files('../torque.jar')
+    compile "com.workday:torque-gradle-plugin:$torque_version"
 }
 ```
+
 In App and Library projects that will be tested and would provide test apks.
-```
+```gradle
 apply plugin: 'com.workday.torque'
 torque {
     variantName "ProdDebug"    // Required
@@ -107,8 +112,16 @@ torque {
 `args` is a dsl for applying any optional params from [Args.kt](torque/src/main/kotlin/com/workday/torque/Args.kt), except the apk paths, which are parsed by the plugin, and only followed when the `torqueRun_` task is ran on that project (see below).
 
 When the plugin is applied on an App module, it will create a `torqueRunAll` task which runs tests on all modules (including the App) that have the plugin applied.
-
 When the plugin is applied on a Library module, it will create a `torqueRunLibrary` task which runs tests on just that Library module.
+  
+Run all plugin-applied app and library modules' tests, with CoolApp being the App module
+```
+./gradlew :CoolApp:torqueRunAll
+```
+Run a specific library module's tests, with CoolLibrary being the Library module
+```
+./gradlew :CoolLibrary:torqueRunLibrary
+```
 
 ### How to build
 

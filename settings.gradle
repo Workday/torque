@@ -1,2 +1,3 @@
-include ':torque'
+include ':torque-core'
 include ':torque-gradle-plugin'
+include ':torque-runner'
