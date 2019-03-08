@@ -3,24 +3,24 @@ apply plugin: 'org.junit.platform.gradle.plugin'
 apply from: file('../gradle/gradle-mvn-push.gradle')
 
 dependencies {
-    compile libraries.kotlinStd
-    compile libraries.kotlinReflect
-    compile libraries.rxJava
-    compile libraries.rxJava2
-    compile libraries.rxJava2Interop
-    compile libraries.jCommander
-    compile(libraries.commanderOs) {
+    implementation libraries.kotlinStd
+    implementation libraries.kotlinReflect
+    implementation libraries.rxJava
+    implementation libraries.rxJava2
+    implementation libraries.rxJava2Interop
+    implementation libraries.jCommander
+    implementation(libraries.commanderOs) {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-runtime'
     }
-    compile(libraries.commanderAndroid)  {
+    implementation(libraries.commanderAndroid)  {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-runtime'
     }
-    compile libraries.apacheCommonsIo
-    compile libraries.apacheCommonsLang
-    compile libraries.gson
-    compile libraries.dexParser
-    compile libraries.kotlinCoroutines
-    compile libraries.kotlinCoroutinesRx2
+    implementation libraries.apacheCommonsIo
+    implementation libraries.apacheCommonsLang
+    implementation libraries.gson
+    implementation libraries.dexParser
+    implementation libraries.kotlinCoroutines
+    implementation libraries.kotlinCoroutinesRx2
 }
 
 dependencies {

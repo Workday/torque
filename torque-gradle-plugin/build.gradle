@@ -8,7 +8,7 @@ repositories {
 dependencies {
     implementation gradleApi()
     implementation libraries.androidGradlePlugin
-    implementation project(':torque-core')
+    implementation project(internal.torqueCore)
 }
 
 jar {

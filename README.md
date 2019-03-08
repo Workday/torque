@@ -1,6 +1,6 @@
 ## Torque — Reactive Android instrumentation test orchestrator with multi-library-modules-testing and test pooling/grouping support.
 
-[![Build Status](https://travis-ci.org/Workday/toque.svg?branch=master)](https://travis-ci.org/Workday/torque)
+[![Build Status](https://travis-ci.org/Workday/torque.svg?branch=master)](https://travis-ci.org/Workday/torque)
 
 Torque is a test orchestrator that aims to support the following features:
 * Support running [Android Library Module](https://developer.android.com/studio/projects/android-library) test Apks. 
@@ -89,7 +89,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.workday:torque-gradle-plugin:$torque_version"
+    implementation "com.workday:torque-gradle-plugin:$torque_version"
 }
 ```
 

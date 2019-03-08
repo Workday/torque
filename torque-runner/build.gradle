@@ -4,8 +4,8 @@ apply plugin: 'application'
 mainClassName = 'com.workday.torque.MainKt'
 
 dependencies {
-    compile libraries.kotlinStd
-    implementation project(':torque-core')
+    implementation libraries.kotlinStd
+    implementation project(internal.torqueCore)
 }
 
 

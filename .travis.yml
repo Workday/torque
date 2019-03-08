@@ -1,13 +1,8 @@
 language: java
-install: true
 script:
 #  https://issues.sonatype.org/browse/OSSRH-38347 Change to auto release or switch repository (jfrog etc.)
 #- "./gradlew clean build uploadArchives -s -PNEXUS_USERNAME=$NEXUS_USERNAME -PNEXUS_PASSWORD=$NEXUS_PASSWORD"
 - "./gradlew clean build -s"
-
-before_deploy:
-- echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
-- echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 
 deploy:
   provider: releases
