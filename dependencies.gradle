@@ -45,5 +45,5 @@ ext.libraries = [
 ]
 
 ext.internal = [
-        torque                 : ":torque",
+        torqueCore             : ":torque-core",
 ]

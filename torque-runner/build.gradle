@@ -1,0 +1,23 @@
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+mainClassName = 'com.workday.torque.MainKt'
+
+dependencies {
+    implementation libraries.kotlinStd
+    implementation project(internal.torqueCore)
+}
+
+
+jar {
+    // Build jar with dependencies.
+    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+    }
+
+    manifest {
+        attributes('Main-Class': mainClassName)
+    }
+}

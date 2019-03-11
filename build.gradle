@@ -21,6 +21,8 @@ allprojects {
     repositories {
         jcenter()
     }
+    version = VERSION_NAME
+    group = GROUP
 
     apply plugin: 'com.github.ben-manes.versions'
 }
