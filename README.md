@@ -62,19 +62,19 @@ With the Gradle plugin
 
 #### Supported options
 
-See [Args.kt](torque/src/main/kotlin/com/workday/torque/Args.kt)
+See [Args.kt](torque-core/src/main/kotlin/com/workday/torque/Args.kt)
 
 ##### Example (Run directly)
 
 Simplest :
 ```console
-java -jar torque-latest-version.jar \
+java -jar torque-runner-$torque_version.jar \
 --test-apks myLibrary1-androidTest.apk myLibrary2-androidTest.apk
 ```
 
 With arguments :
 ```console
-java -jar torque-latest-version.jar \
+java -jar torque-runner-$torque_version.jar \
 --test-apks myLibrary1-androidTest.apk myLibrary2-androidTest.apk \
 --annotations MediumTest \
 --chunk-size 8 \
@@ -109,7 +109,7 @@ torque {
 ```
 `variantName` is the `<product-flavor><Build-Type>`, for example: demoDebug, fullRelease
 
-`args` is a dsl for applying any optional params from [Args.kt](torque/src/main/kotlin/com/workday/torque/Args.kt), except the apk paths, which are parsed by the plugin, and only followed when the `torqueRun_` task is ran on that project (see below).
+`args` is a dsl for applying any optional params from [Args.kt](torque-core/src/main/kotlin/com/workday/torque/Args.kt), except the apk paths, which are parsed by the plugin, and only followed when the `torqueRun_` task is ran on that project (see below).
 
 When the plugin is applied on an App module, it will create a `torqueRunAll` task which runs tests on all modules (including the App) that have the plugin applied.
 When the plugin is applied on a Library module, it will create a `torqueRunLibrary` task which runs tests on just that Library module.
