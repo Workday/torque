@@ -4,16 +4,9 @@ import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestPool
 import io.reactivex.Single
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
-import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 
 class TestRunFactory {
@@ -33,7 +26,7 @@ class TestRunFactory {
             testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer)
     ): Single<AdbDeviceTestSession> {
         val testSession = AdbDeviceTestSession(adbDevice = adbDevice,
-                                               logcatFile = logcatFileIO.fullLogcatFile)
+                logcatFile = logcatFileIO.fullLogcatFile)
         return GlobalScope.async(
                 context = Dispatchers.Default,
                 start = CoroutineStart.DEFAULT,
@@ -60,9 +53,9 @@ class TestRunFactory {
                     }
 
                     adbDevice.log("Device Test Session complete, " +
-                                "${testSession.passedCount} passed, " +
-                                "${testSession.failedCount} failed, took " +
-                                "${testSession.durationMillis.millisToHoursMinutesSeconds()}."
+                            "${testSession.passedCount} passed, " +
+                            "${testSession.failedCount} failed, took " +
+                            "${testSession.durationMillis.millisToHoursMinutesSeconds()}."
                     )
 
                     testSession
@@ -94,11 +87,14 @@ class TestRunFactory {
         }
     }
 
-    private fun getTimeoutMillis(args: Args, installer : Installer, testChunk: TestChunk) : Long {
+    private fun getTimeoutMillis(args: Args, installer: Installer, testChunk: TestChunk): Long {
+        val chunkTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) * args.retriesPerChunk
+        val installTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong()) * args.retriesInstallPerApk
+
         return if (installer.isInstalled(testChunk))
-            TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds)
+            chunkTimeOutWithRetries
         else
-            TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) + TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong())
+            chunkTimeOutWithRetries + installTimeOutWithRetries
     }
 
 
@@ -152,9 +148,9 @@ class TestRunFactory {
                     .map { TestDetails(it.className, it.testName) }
                     .forEach { testDetails: TestDetails ->
                         filePuller.pullTestFolder(args.testFilesPullDeviceDirectory,
-                                                  args.testFilesPullHostDirectory,
-                                                  testDetails,
-                                                  pullFileTimeout).await()
+                                args.testFilesPullHostDirectory,
+                                testDetails,
+                                pullFileTimeout).await()
                     }
         }
     }
