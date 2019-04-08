@@ -1,6 +1,8 @@
 package com.workday.torque
 
+import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestChunk
+import com.workday.torque.pooling.TestModuleInfo
 import com.workday.torque.pooling.TestPool
 import io.mockk.Ordering
 import io.mockk.coEvery

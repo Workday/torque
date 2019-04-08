@@ -43,7 +43,7 @@ class TestRunFactory {
                     do {
                         val chunk = testPool.getNextTestChunk()
                         if (chunk != null) {
-                            val deviceTestsResults = adbDevice.runTestChunkWithRetry(args, logcatFileIO, chunk, testChunkRunner)
+                            val deviceTestsResults = adbDevice.runTestChunkWithRetry(args, logcatFileIO, chunk, testChunkRunner, installer)
                             pullChunkTestFiles(args, filePuller, deviceTestsResults)
                             testSession.apply {
                                 testResults.addAll(deviceTestsResults)
@@ -74,9 +74,11 @@ class TestRunFactory {
             args: Args,
             logcatFileIO: LogcatFileIO,
             testChunk: TestChunk,
-            testChunkRunner: TestChunkRunner
+            testChunkRunner: TestChunkRunner,
+            installer: Installer
     ): List<AdbDeviceTestResult> {
-        val timeoutMillis = TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds)
+        val timeoutMillis = getTimeoutMillis(args, installer, testChunk)
+
         return try {
             withTimeout(timeoutMillis) {
                 var resultsResponse = testChunkRunner.run(args, testChunk)
@@ -91,6 +93,14 @@ class TestRunFactory {
             createTimedOutAdbDeviceTestResults(this, logcatFileIO, testChunk, timeoutMillis, e)
         }
     }
+
+    private fun getTimeoutMillis(args: Args, installer : Installer, testChunk: TestChunk) : Long {
+        return if (installer.isInstalled(testChunk))
+            TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds)
+        else
+            TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) + TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong())
+    }
+
 
     private fun List<TestMethod>.getTestNames() = map { it.testName }
 
