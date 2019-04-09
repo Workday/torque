@@ -33,7 +33,7 @@ class TestRunFactory {
             testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer)
     ): Single<AdbDeviceTestSession> {
         val testSession = AdbDeviceTestSession(adbDevice = adbDevice,
-                logcatFile = logcatFileIO.fullLogcatFile)
+                                               logcatFile = logcatFileIO.fullLogcatFile)
         return GlobalScope.async(
                 context = Dispatchers.Default,
                 start = CoroutineStart.DEFAULT,
@@ -60,9 +60,9 @@ class TestRunFactory {
                     }
 
                     adbDevice.log("Device Test Session complete, " +
-                            "${testSession.passedCount} passed, " +
-                            "${testSession.failedCount} failed, took " +
-                            "${testSession.durationMillis.millisToHoursMinutesSeconds()}."
+                                "${testSession.passedCount} passed, " +
+                                "${testSession.failedCount} failed, took " +
+                                "${testSession.durationMillis.millisToHoursMinutesSeconds()}."
                     )
 
                     testSession
@@ -98,10 +98,12 @@ class TestRunFactory {
         val chunkTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) * args.retriesPerChunk
         val installTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong()) * args.retriesPerChunk * args.retriesInstallPerApk
 
-        return if (installer.isChunkApkInstalled(testChunk))
+        return if (installer.isChunkApkInstalled(testChunk)) {
             chunkTimeOutWithRetries
-        else
+        }
+        else {
             chunkTimeOutWithRetries + installTimeOutWithRetries
+        }
     }
 
 
@@ -155,9 +157,9 @@ class TestRunFactory {
                     .map { TestDetails(it.className, it.testName) }
                     .forEach { testDetails: TestDetails ->
                         filePuller.pullTestFolder(args.testFilesPullDeviceDirectory,
-                                args.testFilesPullHostDirectory,
-                                testDetails,
-                                pullFileTimeout).await()
+                                                  args.testFilesPullHostDirectory,
+                                                  testDetails,
+                                                  pullFileTimeout).await()
                     }
         }
     }
