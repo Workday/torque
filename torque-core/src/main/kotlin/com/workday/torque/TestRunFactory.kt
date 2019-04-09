@@ -4,9 +4,16 @@ import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestPool
 import io.reactivex.Single
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 
 class TestRunFactory {
@@ -91,7 +98,7 @@ class TestRunFactory {
         val chunkTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) * args.retriesPerChunk
         val installTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong()) * args.retriesInstallPerApk
 
-        return if (installer.isInstalled(testChunk))
+        return if (installer.isChunkApkInstalled(testChunk))
             chunkTimeOutWithRetries
         else
             chunkTimeOutWithRetries + installTimeOutWithRetries

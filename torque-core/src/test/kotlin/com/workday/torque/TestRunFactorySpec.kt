@@ -2,7 +2,11 @@ package com.workday.torque
 
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestPool
-import io.mockk.*
+import io.mockk.Ordering
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import io.reactivex.Completable
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.context

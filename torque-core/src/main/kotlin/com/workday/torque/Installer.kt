@@ -12,14 +12,14 @@ import java.util.concurrent.TimeUnit
 class Installer(private val adbDevice: AdbDevice, private val processRunner: ProcessRunner = ProcessRunner()) {
 
     suspend fun ensureTestPackageInstalled(args: Args, testChunk: TestChunk) {
-        if (isInstalled(testChunk)) {
+        if (isChunkApkInstalled(testChunk)) {
             adbDevice.log("Package installed, package: ${testChunk.testModuleInfo.moduleInfo.apkPackage.value}")
         } else {
             installModuleApks(testChunk.testModuleInfo, args)
         }
     }
 
-    fun isInstalled(testChunk: TestChunk) : Boolean {
+    fun isChunkApkInstalled(testChunk: TestChunk) : Boolean {
         val testPackage = testChunk.testModuleInfo.moduleInfo.apkPackage.value
         return adbDevice.installedPackages.contains(testPackage)
     }
