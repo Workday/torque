@@ -96,7 +96,7 @@ class TestRunFactory {
 
     private fun getTimeoutMillis(args: Args, installer: Installer, testChunk: TestChunk): Long {
         val chunkTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) * args.retriesPerChunk
-        val installTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong()) * args.retriesInstallPerApk
+        val installTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong()) * args.retriesPerChunk * args.retriesInstallPerApk
 
         return if (installer.isChunkApkInstalled(testChunk))
             chunkTimeOutWithRetries
