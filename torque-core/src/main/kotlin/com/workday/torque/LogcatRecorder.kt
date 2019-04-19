@@ -1,6 +1,6 @@
 package com.workday.torque
 
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -14,12 +14,12 @@ private const val TEST_RUNNER_FINISHED_STRING = "$TEST_RUNNER_STRING: $FINISHED_
 data class TestDetails(val testClass: String, val testName: String)
 data class TestLogcat(val testDetails: TestDetails, var logcat: String = "")
 
-class LogcatRecorder(private val logcatFileIO: LogcatFileIO) {
+class LogcatRecorder(private val logcatFileIO: LogcatFileIO){
     private var tailAndSaveLogcatJob: Job? = null
 
-    suspend fun start() {
+    suspend fun start(coroutineScope: CoroutineScope) {
         logcatFileIO.redirectLogcatToFile()
-        tailAndSaveLogcatJob = GlobalScope.launch { tailAndSaveLogcatFiles() }
+        tailAndSaveLogcatJob = coroutineScope.launch { tailAndSaveLogcatFiles() }
     }
 
     private suspend fun tailAndSaveLogcatFiles() {

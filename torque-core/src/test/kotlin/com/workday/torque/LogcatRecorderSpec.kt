@@ -84,7 +84,7 @@ class LogcatRecorderSpec : Spek(
                                                      "TestRunner: finished: someTestMethod4(someTestClass4)\n")
 
                 runBlocking {
-                    logcatRecorder.start()
+                    logcatRecorder.start(this)
                 }
 
                 coVerifyOrder {
