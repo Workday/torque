@@ -43,7 +43,7 @@ class TestRunFactorySpec : Spek(
 
         given("A single passed test sequence") {
             val chunkRetryer by memoized {
-                mockk<ChunkRetryer> {
+                mockk<TestChunkRetryer> {
                     coEvery { runTestChunkWithRetry(testChunk = any()) } returnsMany listOf(passedTestChunkResults)
                 }
             }
@@ -69,7 +69,7 @@ class TestRunFactorySpec : Spek(
                                           createIgnoredTest(adbDevice),
                                           createFailedTest(adbDevice))
             val chunkRetryer by memoized {
-                mockk<ChunkRetryer> {
+                mockk<TestChunkRetryer> {
                     coEvery { runTestChunkWithRetry(testChunk = any()) } returnsMany listOf(testChunkResults)
                 }
             }

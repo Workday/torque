@@ -27,7 +27,7 @@ class TestRunFactory {
             installer: Installer = Installer(adbDevice),
             filePuller: FilePuller = FilePuller(adbDevice),
             testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer),
-            chunkRetryer: ChunkRetryer = ChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
+            testChunkRetryer: TestChunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
     ): Single<AdbDeviceTestSession> {
         val testSession = AdbDeviceTestSession(adbDevice = adbDevice,
                                                logcatFile = logcatFileIO.fullLogcatFile)
@@ -40,7 +40,7 @@ class TestRunFactory {
                     do {
                         val chunk = testPool.getNextTestChunk()
                         if (chunk != null) {
-                            val deviceTestsResults = chunkRetryer.runTestChunkWithRetry(chunk)
+                            val deviceTestsResults = testChunkRetryer.runTestChunkWithRetry(chunk)
                             pullChunkTestFiles(args, filePuller, deviceTestsResults)
                             testSession.apply {
                                 testResults.addAll(deviceTestsResults)

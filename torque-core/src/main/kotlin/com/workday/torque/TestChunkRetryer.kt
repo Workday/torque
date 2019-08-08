@@ -6,11 +6,11 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 
-class ChunkRetryer(private val adbDevice: AdbDevice,
-                   private val args: Args,
-                   private val logcatFileIO: LogcatFileIO,
-                   private val testChunkRunner: TestChunkRunner,
-                   private val installer: Installer
+class TestChunkRetryer(private val adbDevice: AdbDevice,
+                       private val args: Args,
+                       private val logcatFileIO: LogcatFileIO,
+                       private val testChunkRunner: TestChunkRunner,
+                       private val installer: Installer
 ) {
 
     suspend fun runTestChunkWithRetry(testChunk: TestChunk): List<AdbDeviceTestResult> {
