@@ -25,8 +25,8 @@ class TorqueSpec : Spek (
         val testSessionA = AdbDeviceTestSession(adbDeviceA, logcatFile = mockk())
         val testSessionB = AdbDeviceTestSession(adbDeviceB, logcatFile = mockk())
         val testRunFactory = mockk<TestRunFactory> {
-            every { runTestSession(adbDeviceA, any(), any(), any(), any(), any(), any(), any()) } returns Single.just(testSessionA)
-            every { runTestSession(adbDeviceB, any(), any(), any(), any(), any(), any(), any()) } returns Single.just(testSessionB)
+            every { runTestSession(adbDeviceA, any(), any(), any(), any(), any(), any(), any(), any()) } returns Single.just(testSessionA)
+            every { runTestSession(adbDeviceB, any(), any(), any(), any(), any(), any(), any(), any()) } returns Single.just(testSessionB)
         }
         val resultWriter = mockk<ResultWriter>(relaxed = true)
 
@@ -39,8 +39,8 @@ class TorqueSpec : Spek (
                     moduleTestParser.parseTestsFromModuleApks()
                     resultWriter.clearOutputDirectory()
                     adbDeviceFinder.onlineAdbDevices()
-                    testRunFactory.runTestSession(adbDeviceA, any(), any(), any(), any(), any(), any(), any())
-                    testRunFactory.runTestSession(adbDeviceB, any(), any(), any(), any(), any(), any(), any())
+                    testRunFactory.runTestSession(adbDeviceA, any(), any(), any(), any(), any(), any(), any(), any())
+                    testRunFactory.runTestSession(adbDeviceB, any(), any(), any(), any(), any(), any(), any(), any())
                     resultWriter.write(any(), listOf(testSessionA, testSessionB))
                 }
             }

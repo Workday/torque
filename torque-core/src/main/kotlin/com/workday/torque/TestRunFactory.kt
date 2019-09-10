@@ -1,19 +1,15 @@
 package com.workday.torque
 
-import com.linkedin.dex.parser.TestMethod
-import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestPool
 import io.reactivex.Single
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
-import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 
 class TestRunFactory {
@@ -30,7 +26,8 @@ class TestRunFactory {
             logcatRecorder: LogcatRecorder = LogcatRecorder(logcatFileIO),
             installer: Installer = Installer(adbDevice),
             filePuller: FilePuller = FilePuller(adbDevice),
-            testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer)
+            testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer),
+            testChunkRetryer: TestChunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
     ): Single<AdbDeviceTestSession> {
         val testSession = AdbDeviceTestSession(adbDevice = adbDevice,
                                                logcatFile = logcatFileIO.fullLogcatFile)
@@ -39,11 +36,11 @@ class TestRunFactory {
                 start = CoroutineStart.DEFAULT,
                 block = {
                     testSession.startTimestampMillis = System.currentTimeMillis()
-                    logcatRecorder.start()
+                    logcatRecorder.start(coroutineScope = this)
                     do {
                         val chunk = testPool.getNextTestChunk()
                         if (chunk != null) {
-                            val deviceTestsResults = adbDevice.runTestChunkWithRetry(args, logcatFileIO, chunk, testChunkRunner, installer)
+                            val deviceTestsResults = testChunkRetryer.runTestChunkWithRetry(chunk)
                             pullChunkTestFiles(args, filePuller, deviceTestsResults)
                             testSession.apply {
                                 testResults.addAll(deviceTestsResults)
@@ -68,76 +65,6 @@ class TestRunFactory {
                     testSession
                 }
         ).asSingle(Dispatchers.Default)
-    }
-
-    private suspend fun AdbDevice.runTestChunkWithRetry(
-            args: Args,
-            logcatFileIO: LogcatFileIO,
-            testChunk: TestChunk,
-            testChunkRunner: TestChunkRunner,
-            installer: Installer
-    ): List<AdbDeviceTestResult> {
-        val timeoutMillis = getTimeoutMillis(args, installer, testChunk)
-
-        return try {
-            withTimeout(timeoutMillis) {
-                var resultsResponse = testChunkRunner.run(args, testChunk)
-                while (resultsResponse.needToRetry(testChunk, args.retriesPerChunk)) {
-                    log("Chunk has failed tests, retry count: ${testChunk.retryCount++}/${args.retriesPerChunk}, retrying...")
-                    resultsResponse = testChunkRunner.run(args, testChunk)
-                }
-                resultsResponse
-            }
-        } catch (e: TimeoutCancellationException) {
-            log("TestChunk retry timeout on $tag, tests ran in chunk: ${testChunk.testMethods.getTestNames()}")
-            createTimedOutAdbDeviceTestResults(this, logcatFileIO, testChunk, timeoutMillis, e)
-        }
-    }
-
-    private fun getTimeoutMillis(args: Args, installer: Installer, testChunk: TestChunk): Long {
-        val allowedChunkRunCount = args.retriesPerChunk + 1
-        val allowedInstallCount = args.retriesInstallPerApk + 1
-        val chunkTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.chunkTimeoutSeconds) * allowedChunkRunCount
-        val installTimeOutWithRetries = TimeUnit.SECONDS.toMillis(args.installTimeoutSeconds.toLong()) * allowedChunkRunCount * allowedInstallCount
-
-        return if (installer.isChunkApkInstalled(testChunk)) {
-            chunkTimeOutWithRetries
-        } else {
-            chunkTimeOutWithRetries + installTimeOutWithRetries
-        }
-    }
-
-
-    private fun List<TestMethod>.getTestNames() = map { it.testName }
-
-    private fun List<AdbDeviceTestResult>?.needToRetry(testChunk: TestChunk, retriesPerChunk: Int): Boolean {
-        return (this == null || hasFailedTests()) && isRetryable(testChunk.retryCount, retriesPerChunk)
-    }
-
-    private fun List<AdbDeviceTestResult>.hasFailedTests(): Boolean {
-        return any { it.status is AdbDeviceTestResult.Status.Failed }
-    }
-
-    private fun isRetryable(retryCount: Int, maxRetryCount: Int) = retryCount < maxRetryCount
-
-    private fun createTimedOutAdbDeviceTestResults(
-            adbDevice: AdbDevice,
-            logcatFileIO: LogcatFileIO,
-            testChunk: TestChunk,
-            timeoutMillis: Long,
-            e: TimeoutCancellationException
-    ): List<AdbDeviceTestResult> {
-        return testChunk.testMethods
-                .map { it.toTestDetails() }
-                .map { testDetails: TestDetails ->
-                    AdbDeviceTestResult(
-                            adbDevice = adbDevice,
-                            className = testDetails.testClass,
-                            testName = testDetails.testName,
-                            status = AdbDeviceTestResult.Status.Failed("Timed out with exception: ${e.message}"),
-                            durationMillis = timeoutMillis,
-                            logcatFile = logcatFileIO.getLogcatFileForTest(testDetails))
-                }
     }
 
     private fun CoroutineScope.pullChunkTestFiles(
