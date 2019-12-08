@@ -17,17 +17,18 @@ class FilePullerSpec : Spek(
     }
 
     given("A test detail") {
-        val hostDirectory = "someHostDir"
-        val deviceDirectory = "someDeviceDir"
-        val testDetails = TestDetails("com.some.package.class", "SomeTest")
+        val args = Args().apply {
+            testFilesPullDeviceDirectory = "someDeviceDir"
+            testFilesPullHostDirectory = "someHostDir"
+        }
         it("Runs adb pull command for that test folder") {
-            filePuller.pullTestFolder(hostDirectory, deviceDirectory, testDetails, mockk())
+            filePuller.pullFolder(args, "subFolder")
 
             verify {
                 val commandAndArgsMatcher = match<List<String>> {
                     it[0] == "-s" && it[1] == adbDevice.id && it[2] == "pull" &&
-                            it[3] == "someDeviceDir/com.some.package.class/SomeTest" &&
-                            it[4].endsWith("someHostDir/com.some.package.class/SomeTest")
+                            it[3] == "someDeviceDir/subFolder" &&
+                            it[4].endsWith("someHostDir")
                 }
                 processRunner.runAdb(commandAndArgsMatcher, any(), any(), any(), any(), any(), any())
             }

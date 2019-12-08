@@ -194,4 +194,38 @@ class ArgsSpec : Spek(
             assertThat(args.testFilesPullHostDirectory).isEqualTo("hostDir")
         }
     }
+
+    context("parse args with explicitly passed --uninstall-apk-after-test") {
+
+        listOf(true, false).forEach { uninstallApkAfterTest ->
+
+            context("--uninstall-apk-after-test $uninstallApkAfterTest") {
+
+                val args by memoized {
+                    parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--uninstall-apk-after-test", "$uninstallApkAfterTest"))
+                }
+
+                it("parses --uninstall-apk-after-test correctly") {
+                    assertThat(args.uninstallApkAfterTest).isEqualTo(uninstallApkAfterTest)
+                }
+            }
+        }
+    }
+
+    context("parse args with explicitly passed --record-failed-tests") {
+
+        listOf(true, false).forEach { recordFailedTests ->
+
+            context("--record-failed-tests $recordFailedTests") {
+
+                val args by memoized {
+                    parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--record-failed-tests", "$recordFailedTests"))
+                }
+
+                it("parses --record-failed-tests correctly") {
+                    assertThat(args.recordFailedTests).isEqualTo(recordFailedTests)
+                }
+            }
+        }
+    }
 })

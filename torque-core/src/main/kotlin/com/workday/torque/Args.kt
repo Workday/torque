@@ -12,6 +12,7 @@ const val DEFAULT_CHUNK_SIZE = 1
 const val DEFAULT_PER_CHUNK_TIMEOUT_SECONDS = 120L
 const val DEFAULT_MAX_RETRIES_PER_CHUNK = 1
 const val DEFAULT_TORQUE_TIMEOUT_MINUTES = 60L
+const val DEFAULT_FILES_PULL_DEVICE_DIR_PATH = "/sdcard/test-files"
 
 data class Args(
         @Parameter(
@@ -112,24 +113,31 @@ data class Args(
 
         @Parameter(
                 names = ["--test-files-pull-device-directory"],
-                description = "Directory on device to pull test files from. Setting this directory and --file-pull-host-directory will enable recursive pulling of the folders." +
-                        "This folder would have the structure of deviceDirectory\\TestClass\\TestMethod for all tests"
+                description = "Directory on device to pull test files from. Setting this directory and --file-pull-host-directory will enable recursive pulling of the folders."
         )
-        var testFilesPullDeviceDirectory: String = "",
+        var testFilesPullDeviceDirectory: String = DEFAULT_FILES_PULL_DEVICE_DIR_PATH,
 
         @Parameter(
                 names = ["--test-files-pull-host-directory"],
-                description = "Directory on the Torque run host machine to pull test files to. Setting this and --file-pull-device-directory will enable pulling of the folders." +
-                        "This folder would have the structure of hostDirectory\\TestClass\\TestMethod for all tests"
+                description = "Directory on the Torque run host machine to pull test files into. Setting this and --file-pull-device-directory will enable pulling of the folders." +
+                        "This folder would have the structure of hostDirectory\\deviceDirectory"
         )
         var testFilesPullHostDirectory: String = "",
 
         @Parameter(
                 names = ["--uninstall-apk-after-test"],
+                arity = 1,
                 description = "Always only have one module's test apk and app apk installed per device. Uninstalls the current test modules and app modules when starting a different test module." +
                         "This is required when multiple apks contain the same intent filters due to AndroidManifest.xml merging."
         )
-        var uninstallApkAfterTest: Boolean = false
+        var uninstallApkAfterTest: Boolean = false,
+
+        @Parameter(
+                names = ["--record-failed-tests"],
+                arity = 1,
+                description = "Screen record failed tests on last try, file will be under"
+        )
+        var recordFailedTests: Boolean = false
 )
 
 fun parseArgs(rawArgs: Array<String>): Args {

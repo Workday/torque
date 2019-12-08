@@ -24,7 +24,7 @@ class TestRunFactorySpec : Spek(
         val logcatRecorder = mockk<LogcatRecorder>(relaxed = true)
         val filePuller by memoized {
             mockk<FilePuller> {
-                every { pullTestFolder(any(), any(), any(), any()) } returns Completable.complete()
+                every { pullFolder(any(), any()) } returns Completable.complete()
             }
         }
         val installer = mockk<Installer>(relaxed = true)
@@ -73,12 +73,8 @@ class TestRunFactorySpec : Spek(
                     coEvery { runTestChunkWithRetry(testChunk = any()) } returnsMany listOf(testChunkResults)
                 }
             }
-            val passedTestDetails = testChunkResults
-                    .filter { it.status is AdbDeviceTestResult.Status.Passed }
-                    .map { TestDetails(it.className, it.testName) }
-
             given("defined test files folders") {
-                it("It pulls test files only on non-ignored tests") {
+                it("pulls test files") {
                     val args = Args().apply {
                         appApkPath = "somePath"
                         testFilesPullDeviceDirectory = "somePath"
@@ -89,15 +85,13 @@ class TestRunFactorySpec : Spek(
                             .await()
 
                     coVerify(ordering = Ordering.ALL) {
-                        passedTestDetails.forEach {
-                            filePuller.pullTestFolder(any(), any(), eq(it), any())
-                        }
+                        filePuller.pullFolder(args, any())
                     }
                 }
             }
 
             given("no defined test files folders") {
-                it("It does not pull test files") {
+                it("does not pull test files") {
                     val args = Args().apply {
                         appApkPath = "somePath"
                     }
@@ -106,10 +100,8 @@ class TestRunFactorySpec : Spek(
                             .test()
                             .await()
 
-                    coVerify(ordering = Ordering.UNORDERED, inverse = true) {
-                        passedTestDetails.forEach {
-                            filePuller.pullTestFolder(any(), any(), eq(it), any())
-                        }
+                    coVerify(inverse = true) {
+                        filePuller.pullFolder(args, any())
                     }
                 }
             }

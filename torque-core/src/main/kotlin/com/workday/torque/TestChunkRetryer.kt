@@ -2,6 +2,7 @@ package com.workday.torque
 
 import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.TestChunk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
@@ -10,7 +11,8 @@ class TestChunkRetryer(private val adbDevice: AdbDevice,
                        private val args: Args,
                        private val logcatFileIO: LogcatFileIO,
                        private val testChunkRunner: TestChunkRunner,
-                       private val installer: Installer
+                       private val installer: Installer,
+                       private val screenRecorder: ScreenRecorder = ScreenRecorder(adbDevice, args)
 ) {
 
     suspend fun runTestChunkWithRetry(testChunk: TestChunk): List<AdbDeviceTestResult> {
@@ -21,7 +23,11 @@ class TestChunkRetryer(private val adbDevice: AdbDevice,
                 var resultsResponse = testChunkRunner.run(args, testChunk)
                 while (resultsResponse.needToRetry(testChunk, args.retriesPerChunk)) {
                     adbDevice.log("Chunk has failed tests, retry count: ${testChunk.retryCount++}/${args.retriesPerChunk}, retrying...")
-                    resultsResponse = testChunkRunner.run(args, testChunk)
+                    resultsResponse = if (args.recordFailedTests && isLastRun(testChunk.retryCount, args.retriesPerChunk)) {
+                        runTestChunkInIndividualRecordedChunks(testChunk)
+                    } else {
+                        testChunkRunner.run(args, testChunk)
+                    }
                 }
                 resultsResponse
             }
@@ -55,6 +61,37 @@ class TestChunkRetryer(private val adbDevice: AdbDevice,
     }
 
     private fun isRetryable(retryCount: Int, maxRetryCount: Int) = retryCount < maxRetryCount
+
+    private fun isLastRun(retryCount: Int, maxRetryCount: Int) = retryCount == maxRetryCount
+
+    private suspend fun CoroutineScope.runTestChunkInIndividualRecordedChunks(testChunk: TestChunk): List<AdbDeviceTestResult> {
+        val resultsResponse = mutableListOf<AdbDeviceTestResult>()
+        testChunk.toSingleTestChunks().forEach { singleTestChunk ->
+            screenRecorder.start(this, singleTestChunk.getTestDetails())
+            val singleTestResultList = testChunkRunner.run(args, singleTestChunk)
+            resultsResponse.addAll(singleTestResultList)
+            screenRecorder.stop()
+            if (!singleTestResultList.hasFailedTests()) {
+                screenRecorder.removeLastFile()
+            }
+        }
+        return resultsResponse
+    }
+
+    private fun TestChunk.toSingleTestChunks(): List<TestChunk> {
+        return testMethods.map {
+            TestChunk(
+                    index = index,
+                    testModuleInfo = testModuleInfo,
+                    testMethods = listOf(it),
+                    retryCount = retryCount
+            )
+        }
+    }
+
+    private fun TestChunk.getTestDetails(): TestDetails {
+        return testMethods.single().toTestDetails()
+    }
 
     private fun createTimedOutAdbDeviceTestResults(
             testChunk: TestChunk,

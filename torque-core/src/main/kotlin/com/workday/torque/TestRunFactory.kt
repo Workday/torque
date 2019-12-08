@@ -10,7 +10,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
-import java.util.concurrent.TimeUnit
 
 class TestRunFactory {
 
@@ -41,7 +40,6 @@ class TestRunFactory {
                         val chunk = testPool.getNextTestChunk()
                         if (chunk != null) {
                             val deviceTestsResults = testChunkRetryer.runTestChunkWithRetry(chunk)
-                            pullChunkTestFiles(args, filePuller, deviceTestsResults)
                             testSession.apply {
                                 testResults.addAll(deviceTestsResults)
                                 passedCount += deviceTestsResults.count { it.status is AdbDeviceTestResult.Status.Passed }
@@ -61,34 +59,18 @@ class TestRunFactory {
                                 "${testSession.failedCount} failed, took " +
                                 "${testSession.durationMillis.millisToHoursMinutesSeconds()}."
                     )
+                    pullDeviceFiles(args, filePuller)
 
                     testSession
                 }
         ).asSingle(Dispatchers.Default)
     }
 
-    private fun CoroutineScope.pullChunkTestFiles(
-            args: Args, filePuller: FilePuller,
-            deviceTestsResults: List<AdbDeviceTestResult>
-    ) {
+    private fun CoroutineScope.pullDeviceFiles(args: Args, filePuller: FilePuller) {
         if (args.testFilesPullDeviceDirectory.isEmpty() || args.testFilesPullHostDirectory.isEmpty()) {
             return
         }
-        val completedTestResults = deviceTestsResults.filter { it.status !is AdbDeviceTestResult.Status.Ignored }
-        if (completedTestResults.isEmpty()) {
-            return
-        }
 
-        launch {
-            val pullFileTimeout = Timeout(args.installTimeoutSeconds, TimeUnit.SECONDS)
-            completedTestResults
-                    .map { TestDetails(it.className, it.testName) }
-                    .forEach { testDetails: TestDetails ->
-                        filePuller.pullTestFolder(args.testFilesPullDeviceDirectory,
-                                                  args.testFilesPullHostDirectory,
-                                                  testDetails,
-                                                  pullFileTimeout).await()
-                    }
-        }
+        launch { filePuller.pullFolder(args).await() }
     }
 }
