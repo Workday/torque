@@ -13,7 +13,7 @@ class ScreenRecorder(private val adbDevice: AdbDevice,
     private val videosDir = File(File(args.testFilesPullDeviceDirectory, "videos"), adbDevice.id)
     private val timeoutSeconds = args.chunkTimeoutSeconds
     private var videoRecordJob: Job? = null
-    private lateinit var videoFileName: File
+    private var videoFileName: File? = null
 
     suspend fun start(coroutineScope: CoroutineScope, testDetails: TestDetails) {
         videoRecordJob = coroutineScope.launch { startRecordTestRun(testDetails) }
@@ -24,12 +24,12 @@ class ScreenRecorder(private val adbDevice: AdbDevice,
 
         processRunner.runAdb(commandAndArgs = listOf(
                 "-s", adbDevice.id,
-                "shell", "mkdir -p ${videoFileName.parentFile}"
+                "shell", "mkdir -p ${videoFileName!!.parentFile}"
         ),
                 destroyOnUnsubscribe = true)
                 .ofType(Notification.Exit::class.java)
                 .map { true }
-                .doOnError { error -> adbDevice.log("Failed to mkdir on ${adbDevice.tag}, filepath: ${videoFileName.parentFile}, failed: $error") }
+                .doOnError { error -> adbDevice.log("Failed to mkdir on ${adbDevice.tag}, filepath: ${videoFileName!!.parentFile}, failed: $error") }
                 .ignoreElements()
                 .await()
 
@@ -49,12 +49,13 @@ class ScreenRecorder(private val adbDevice: AdbDevice,
 
     private fun getVideoFile(testDetails: TestDetails): File {
         val testFolder = File(File(videosDir, testDetails.testClass), testDetails.testName)
-        return File(testFolder, "failed_recording.mp4")
+        return File(testFolder, "test_recording.mp4")
     }
 
     fun stop() = videoRecordJob?.cancel()
 
     suspend fun removeLastFile() {
+        checkNotNull(videoFileName) { "Filename cannot be null, must call start() first" }
         processRunner.runAdb(commandAndArgs = listOf(
                 "-s", adbDevice.id,
                 "shell", "rm $videoFileName"

@@ -45,12 +45,12 @@ class ScreenRecorderSpec : Spek(
                 processRunner.runAdb(mkdirCommandAndArgsMatcher, any(), any(), any(), any(), any(), any())
                 val recordCommandAndArgsMatcher = match<List<String>> {
                     it[0] == "-s" && it[1] == adbDevice.id && it[2] == "shell" &&
-                            it[3] == "screenrecord someDeviceDir/videos/id/someTestClass/someTestMethod/failed_recording.mp4 --time-limit $DEFAULT_PER_CHUNK_TIMEOUT_SECONDS --size 720x1440"
+                            it[3] == "screenrecord someDeviceDir/videos/id/someTestClass/someTestMethod/test_recording.mp4 --time-limit $DEFAULT_PER_CHUNK_TIMEOUT_SECONDS --size 720x1440"
                 }
                 processRunner.runAdb(recordCommandAndArgsMatcher, any(), any(), any(), any(), any(), any())
                 val rmCommandAndArgsMatcher = match<List<String>> {
                     it[0] == "-s" && it[1] == adbDevice.id && it[2] == "shell" &&
-                            it[3] == "rm someDeviceDir/videos/id/someTestClass/someTestMethod/failed_recording.mp4"
+                            it[3] == "rm someDeviceDir/videos/id/someTestClass/someTestMethod/test_recording.mp4"
                 }
                 processRunner.runAdb(rmCommandAndArgsMatcher, any(), any(), any(), any(), any(), any())
             }

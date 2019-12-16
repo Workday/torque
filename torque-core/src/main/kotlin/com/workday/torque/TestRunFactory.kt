@@ -2,12 +2,10 @@ package com.workday.torque
 
 import com.workday.torque.pooling.TestPool
 import io.reactivex.Single
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
 
@@ -66,11 +64,11 @@ class TestRunFactory {
         ).asSingle(Dispatchers.Default)
     }
 
-    private fun CoroutineScope.pullDeviceFiles(args: Args, filePuller: FilePuller) {
+    private suspend fun pullDeviceFiles(args: Args, filePuller: FilePuller) {
         if (args.testFilesPullDeviceDirectory.isEmpty() || args.testFilesPullHostDirectory.isEmpty()) {
             return
         }
 
-        launch { filePuller.pullFolder(args).await() }
+        filePuller.pullFolder(args).await()
     }
 }
