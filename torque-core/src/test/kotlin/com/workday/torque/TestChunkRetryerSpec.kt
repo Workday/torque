@@ -4,7 +4,9 @@ import com.workday.torque.pooling.TestChunk
 import com.workday.torque.utils.FakeAdbTestResultFactory.createCrashedTests
 import com.workday.torque.utils.FakeAdbTestResultFactory.createFailedTest
 import com.workday.torque.utils.FakeAdbTestResultFactory.createPassedTest
+import com.workday.torque.utils.createTestMethodsList
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.spek.api.Spek
@@ -21,6 +23,7 @@ class TestChunkRetryerSpec : Spek(
         val logcatFileIO = mockk<LogcatFileIO>(relaxed = true)
 
         val installer = mockk<Installer>(relaxed = true)
+        val screenRecorder = mockk<ScreenRecorder>(relaxed = true)
 
         val crashedTestChunkResults1 = createCrashedTests(adbDevice)
         val crashedTestChunkResults2 = createCrashedTests(adbDevice)
@@ -47,7 +50,7 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 3
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
+                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
 
                 it("Retries until success and outputs test results with all passed tests") {
                     runBlocking {
@@ -63,7 +66,7 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 2
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
+                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
 
                 it("Retries until max retries and outputs test results with failed tests") {
                     runBlocking {
@@ -79,7 +82,7 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 1
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
+                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
 
                 it("Retries until max retries and outputs test results with failed crashed tests") {
                     runBlocking {
@@ -95,14 +98,43 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 0
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
+                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
 
-                it("Doesn't retry and outputs test results with failed crashed tests") {
+                it("Doesn't retry and outputs test results with failed crashed tests and records screen") {
                     runBlocking {
                         val testResults = chunkRetryer.runTestChunkWithRetry(TestChunk(index = 0, testModuleInfo = mockk(), testMethods = mockk()))
                         assertTrue {
                             testResults.containsAll(crashedTestChunkResults1)
                         }
+                    }
+                }
+            }
+        }
+
+        given("A twice crashed then failed test sequence") {
+            val testChunkRunner by memoized {
+                mockk<TestChunkRunner> {
+                    coEvery { run(args = any(), testChunk = any()) } returnsMany listOf(crashedTestChunkResults1,
+                            crashedTestChunkResults2,
+                            failedTestChunkResults)
+                }
+            }
+            on("Max retry count 2") {
+                val args = Args().apply {
+                    retriesPerChunk = 2
+                    recordFailedTests = true
+                }
+                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
+
+                it("Retries until last retry and then start and stop screen recorder") {
+                    val testChunk = TestChunk(0, mockk(), createTestMethodsList(4))
+                    runBlocking {
+                        chunkRetryer.runTestChunkWithRetry(testChunk)
+                    }
+
+                    coVerify {
+                        screenRecorder.start(any(), any())
+                        screenRecorder.stop()
                     }
                 }
             }
