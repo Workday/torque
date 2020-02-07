@@ -58,12 +58,14 @@ class LogcatRecorder(
     }
 
     private fun createAndInitTestLogcat(newLine: String): TestLogcat {
-        return TestLogcat(testDetails = newLine.parseTestDetails()!!)
+        val testDetails = newLine.parseTestDetails()
+                ?: TestDetails("CorruptFormatClass", "CorruptFormatMethod")
+        return TestLogcat(testDetails = testDetails)
                 .apply { appendNewLogLine(newLine) }
     }
 
     private fun TestLogcat.isMatchingFinishTestLogcat(newLine: String): Boolean {
-        return testDetails == newLine.parseTestDetails()!!
+        return testDetails == newLine.parseTestDetails()
     }
 
     private fun TestLogcat.finishAndWriteLogcatFile(newLine: String) {
