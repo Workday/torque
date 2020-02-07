@@ -20,7 +20,7 @@ class TestRunFactory {
                     timeoutSeconds = args.chunkTimeoutSeconds.toInt(),
                     outputDirPath = args.outputDirectory
             ),
-            logcatRecorder: LogcatRecorder = LogcatRecorder(logcatFileIO),
+            logcatRecorder: LogcatRecorder = LogcatRecorder(adbDevice, logcatFileIO),
             installer: Installer = Installer(adbDevice),
             filePuller: FilePuller = FilePuller(adbDevice),
             testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer),

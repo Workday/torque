@@ -14,7 +14,9 @@ private const val TEST_RUNNER_FINISHED_STRING = "$TEST_RUNNER_STRING: $FINISHED_
 data class TestDetails(val testClass: String, val testName: String)
 data class TestLogcat(val testDetails: TestDetails, var logcat: String = "")
 
-class LogcatRecorder(private val logcatFileIO: LogcatFileIO){
+class LogcatRecorder(
+        private val adbDevice: AdbDevice,
+        private val logcatFileIO: LogcatFileIO) {
     private var tailAndSaveLogcatJob: Job? = null
 
     suspend fun start(coroutineScope: CoroutineScope) {
@@ -29,17 +31,25 @@ class LogcatRecorder(private val logcatFileIO: LogcatFileIO){
             when {
                 newLine.contains(TEST_RUNNER_STARTED_STRING) -> {
                     if (currentTestLogcat != null) {
-                        val message = "Started next test without finishing the last one." +
+                        val artificialLog = "[Torque]: Started next test without finishing the last one." +
                                 " Unfinished test: ${currentTestLogcat.testDetails.testClass}.${currentTestLogcat.testDetails.testName}"
-                        throw IllegalStateException(message)
+                        adbDevice.log(artificialLog)
+                        currentTestLogcat.finishAndWriteLogcatFile(artificialLog)
                     }
                     currentTestLogcat = createAndInitTestLogcat(newLine)
                 }
                 newLine.contains(TEST_RUNNER_FINISHED_STRING) -> {
-                    if (currentTestLogcat == null) {
-                        throw IllegalStateException("Finished a test before starting one.")
+                    when {
+                        currentTestLogcat == null -> {
+                            adbDevice.log("Finished a test before starting one, logcat cannot be recorded")
+                        }
+                        !currentTestLogcat.isMatchingFinishTestLogcat(newLine) -> {
+                            adbDevice.log("Finished a different test from the started one, logcat cannot be recorded")
+                        }
+                        else -> {
+                            currentTestLogcat.finishAndWriteLogcatFile(newLine)
+                        }
                     }
-                    currentTestLogcat.finishAndWriteLogcatFile(newLine)
                     currentTestLogcat = null
                 }
                 else -> currentTestLogcat?.appendNewLogLine(newLine)
@@ -52,10 +62,11 @@ class LogcatRecorder(private val logcatFileIO: LogcatFileIO){
                 .apply { appendNewLogLine(newLine) }
     }
 
+    private fun TestLogcat.isMatchingFinishTestLogcat(newLine: String): Boolean {
+        return testDetails == newLine.parseTestDetails()!!
+    }
+
     private fun TestLogcat.finishAndWriteLogcatFile(newLine: String) {
-        if (testDetails != newLine.parseTestDetails()!!) {
-            throw IllegalStateException("Finished a different test from the started one.")
-        }
         appendNewLogLine(newLine)
         logcatFileIO.writeLogcatFileForTest(this)
     }
