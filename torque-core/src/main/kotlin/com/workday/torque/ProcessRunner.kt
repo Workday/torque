@@ -6,8 +6,11 @@ import com.gojuno.commander.os.process
 import io.reactivex.Observable
 import java.io.File
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ProcessRunner {
+@Singleton
+class ProcessRunner @Inject constructor() {
     fun run(commandAndArgs: List<String>,
             timeout: Timeout? = Timeout(DEFAULT_PER_CHUNK_TIMEOUT_SECONDS.toInt(), TimeUnit.SECONDS),
             redirectOutputTo: File? = null,

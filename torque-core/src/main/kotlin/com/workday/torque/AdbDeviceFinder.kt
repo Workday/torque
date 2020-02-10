@@ -3,8 +3,11 @@ package com.workday.torque
 import com.gojuno.commander.android.connectedAdbDevices
 import com.gojuno.commander.os.log
 import io.reactivex.Single
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AdbDeviceFinder {
+@Singleton
+class AdbDeviceFinder @Inject constructor() {
 
     fun onlineAdbDevices(): Single<List<AdbDevice>> {
         return connectedAdbDevices()

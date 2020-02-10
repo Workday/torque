@@ -28,11 +28,13 @@ class TestChunkRunnerSpec : Spek(
         val processRunner by memoized { mockk<ProcessRunner>() }
         val instrumentationReader by memoized { mockk<InstrumentationReader>() }
         val testChunkRunner by memoized {
-            TestChunkRunner(adbDevice,
-                            logcatFileIO,
-                            installer,
-                            processRunner,
-                            instrumentationReader)
+            TestChunkRunner().apply {
+                this.adbDevice = adbDevice
+                this.logcatFileIO = logcatFileIO
+                this.installer = installer
+                this.processRunner = processRunner
+                this.instrumentationReader = instrumentationReader
+            }
         }
 
         given("a chunk of 3 tests") {
@@ -85,7 +87,7 @@ class TestChunkRunnerSpec : Spek(
 
                     val adbDeviceTestResults = runBlocking {
                         testChunkRunner.run(args, testChunk)
-                    }!!
+                    }
 
                     assertEquals(expectedTestResults, adbDeviceTestResults)
                 }

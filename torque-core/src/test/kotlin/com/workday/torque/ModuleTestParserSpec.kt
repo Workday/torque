@@ -20,11 +20,15 @@ class ModuleTestParserSpec : Spek(
         val args = Args().apply {
             testApkPaths = MutableList(moduleCount) { testApkPath }
         }
+        val moduleTestParserSpec = ModuleTestParser().apply {
+            this.args = args
+            this.apkTestParser = ApkTestParser()
+        }
 
         it("parses TestModules correctly") {
             val expectedTestModules = createExpectedTestModules(testApkPath, moduleCount)
 
-            assertThat(ModuleTestParser(args).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+            assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
         }
     }
 
@@ -69,6 +73,10 @@ class ModuleTestParserSpec : Spek(
                 testApkPaths = listOf(testApkPath)
                 appApkPath = targetApkPath
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters out Ignored tests only") {
                 val expectedTestMethods = listOf(
@@ -77,7 +85,7 @@ class ModuleTestParserSpec : Spek(
                         flakyMediumTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
 
@@ -87,12 +95,16 @@ class ModuleTestParserSpec : Spek(
                 appApkPath = targetApkPath
                 annotations = listOf("MediumTest")
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters to MediumTests only") {
                 val expectedTestMethods = listOf(mediumTest, flakyMediumTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
 
@@ -102,12 +114,16 @@ class ModuleTestParserSpec : Spek(
                 appApkPath = targetApkPath
                 annotations = listOf("MediumTest", "FlakyTest")
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters to MediumTest FlakyTest tests only") {
                 val expectedTestMethods = listOf(flakyMediumTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
 
@@ -117,12 +133,16 @@ class ModuleTestParserSpec : Spek(
                 appApkPath = targetApkPath
                 notAnnotations = listOf("FlakyTest")
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters out FlakyTest tests only") {
                 val expectedTestMethods = listOf(noAnnotationsTest, ignoredTest, mediumTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
     }
@@ -150,12 +170,16 @@ class ModuleTestParserSpec : Spek(
                 testApkPaths = listOf(testApkPath)
                 appApkPath = targetApkPath
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters to all tests") {
                 val expectedTestMethods = listOf(prefixSomeSpecificTest, prefixSpecificTest, someOtherTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
 
@@ -165,12 +189,16 @@ class ModuleTestParserSpec : Spek(
                 appApkPath = targetApkPath
                 testClassRegexes = listOf("(Prefix[a-zA-Z]*SpecificTest)+")
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters to regex matching tests only") {
                 val expectedTestMethods = listOf(prefixSomeSpecificTest, prefixSpecificTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
 
@@ -180,12 +208,16 @@ class ModuleTestParserSpec : Spek(
                 appApkPath = targetApkPath
                 testClassRegexes = listOf("(PrefixSpecificTest)+", "(SomeOtherTest)+")
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters to regex matching tests only") {
                 val expectedTestMethods = listOf(prefixSpecificTest, someOtherTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
     }
@@ -229,12 +261,16 @@ class ModuleTestParserSpec : Spek(
                 notAnnotations = listOf("FlakyTest")
                 testClassRegexes = listOf("[a-zA-Z]+SpecificTest")
             }
+            val moduleTestParserSpec = ModuleTestParser().apply {
+                this.args = args
+                this.apkTestParser = apkTestParser
+            }
 
             it("filters to MediumTests Non-FlakyTest SpecificTest only") {
                 val expectedTestMethods = listOf(mediumSpecificTest)
                 val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 
-                assertThat(ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
+                assertThat(moduleTestParserSpec.parseTestsFromModuleApks()).isEqualTo(expectedTestModules)
             }
         }
     }

@@ -4,8 +4,15 @@ import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestModule
 import com.workday.torque.pooling.TestModuleInfo
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTestParser = ApkTestParser()) {
+@Singleton
+class ModuleTestParser @Inject constructor() {
+
+    @Inject internal lateinit var args: Args
+    @Inject internal lateinit var apkTestParser: ApkTestParser
+
     fun parseTestsFromModuleApks(): List<TestModule> {
         return args.testApkPaths.fold(mutableListOf()) { accumulatedModules, testApkPath ->
             accumulatedModules.apply {

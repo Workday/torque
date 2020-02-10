@@ -13,7 +13,10 @@ class FilePullerSpec : Spek(
         mockk<ProcessRunner>(relaxed = true)
     }
     val filePuller by memoized {
-        FilePuller(adbDevice, processRunner)
+        FilePuller().apply {
+            this.adbDevice = adbDevice
+            this.processRunner = processRunner
+        }
     }
 
     given("A test detail") {

@@ -50,7 +50,14 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 3
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
+                val chunkRetryer = TestChunkRetryer().apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.testChunkRunner = testChunkRunner
+                    this.installer = installer
+                    this.screenRecorder = screenRecorder
+                }
 
                 it("Retries until success and outputs test results with all passed tests") {
                     runBlocking {
@@ -66,7 +73,14 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 2
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
+                val chunkRetryer = TestChunkRetryer().apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.testChunkRunner = testChunkRunner
+                    this.installer = installer
+                    this.screenRecorder = screenRecorder
+                }
 
                 it("Retries until max retries and outputs test results with failed tests") {
                     runBlocking {
@@ -82,7 +96,14 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 1
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
+                val chunkRetryer = TestChunkRetryer().apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.testChunkRunner = testChunkRunner
+                    this.installer = installer
+                    this.screenRecorder = screenRecorder
+                }
 
                 it("Retries until max retries and outputs test results with failed crashed tests") {
                     runBlocking {
@@ -98,7 +119,14 @@ class TestChunkRetryerSpec : Spek(
                 val args = Args().apply {
                     retriesPerChunk = 0
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
+                val chunkRetryer = TestChunkRetryer().apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.testChunkRunner = testChunkRunner
+                    this.installer = installer
+                    this.screenRecorder = screenRecorder
+                }
 
                 it("Doesn't retry and outputs test results with failed crashed tests and records screen") {
                     runBlocking {
@@ -124,7 +152,14 @@ class TestChunkRetryerSpec : Spek(
                     retriesPerChunk = 2
                     recordFailedTests = true
                 }
-                val chunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer, screenRecorder)
+                val chunkRetryer = TestChunkRetryer().apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.testChunkRunner = testChunkRunner
+                    this.installer = installer
+                    this.screenRecorder = screenRecorder
+                }
 
                 it("Retries until last retry and then start and stop screen recorder") {
                     val testChunk = TestChunk(0, mockk(), createTestMethodsList(4))

@@ -1,19 +1,23 @@
 package com.workday.torque
 
 import com.linkedin.dex.parser.TestMethod
+import com.workday.torque.dagger.SessionScope
 import com.workday.torque.pooling.TestChunk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class TestChunkRetryer(private val adbDevice: AdbDevice,
-                       private val args: Args,
-                       private val logcatFileIO: LogcatFileIO,
-                       private val testChunkRunner: TestChunkRunner,
-                       private val installer: Installer,
-                       private val screenRecorder: ScreenRecorder = ScreenRecorder(adbDevice, args)
-) {
+@SessionScope
+class TestChunkRetryer @Inject constructor() {
+
+    @Inject internal lateinit var adbDevice: AdbDevice
+    @Inject internal lateinit var args: Args
+    @Inject internal lateinit var logcatFileIO: LogcatFileIO
+    @Inject internal lateinit var testChunkRunner: TestChunkRunner
+    @Inject internal lateinit var installer: Installer
+    @Inject internal lateinit var screenRecorder: ScreenRecorder
 
     suspend fun runTestChunkWithRetry(testChunk: TestChunk): List<AdbDeviceTestResult> {
         val timeoutMillis = getTimeoutMillis(args, installer, testChunk)

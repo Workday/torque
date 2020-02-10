@@ -5,8 +5,11 @@ import com.gojuno.commander.os.Notification
 import com.gojuno.commander.os.process
 import com.linkedin.dex.parser.DexParser
 import com.linkedin.dex.parser.TestMethod
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ApkTestParser {
+@Singleton
+class ApkTestParser @Inject constructor() {
     fun getValidatedTestPackage(testApkPath: String): ApkPackage.Valid {
         return parseTestPackage(testApkPath).validateApkPackage()
     }

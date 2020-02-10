@@ -5,8 +5,13 @@ import com.google.gson.Gson
 import com.workday.torque.html.writeHtmlReport
 import java.io.File
 import java.util.Date
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ResultWriter(val args: Args) {
+@Singleton
+class ResultWriter @Inject constructor() {
+
+    @Inject internal lateinit var args: Args
 
     fun clearOutputDirectory() {
         File(args.outputDirectory).deleteRecursively()

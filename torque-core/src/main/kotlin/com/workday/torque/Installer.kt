@@ -1,6 +1,7 @@
 package com.workday.torque
 
 import com.gojuno.commander.os.Notification
+import com.workday.torque.dagger.SessionScope
 import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestModuleInfo
@@ -8,8 +9,13 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import kotlinx.coroutines.rx2.await
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class Installer(private val adbDevice: AdbDevice, private val processRunner: ProcessRunner = ProcessRunner()) {
+@SessionScope
+class Installer @Inject constructor() {
+
+    @Inject internal lateinit var adbDevice: AdbDevice
+    @Inject internal lateinit var processRunner: ProcessRunner
 
     suspend fun ensureTestPackageInstalled(args: Args, testChunk: TestChunk) {
         if (isChunkApkInstalled(testChunk)) {

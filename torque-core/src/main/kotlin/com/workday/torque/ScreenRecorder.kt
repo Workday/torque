@@ -1,17 +1,21 @@
 package com.workday.torque
 
 import com.gojuno.commander.os.Notification
+import com.workday.torque.dagger.SessionScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.await
 import java.io.File
+import javax.inject.Inject
 
-class ScreenRecorder(private val adbDevice: AdbDevice,
-                     args: Args,
-                     private val processRunner: ProcessRunner = ProcessRunner()) {
-    private val videosDir = File(File(args.testFilesPullDeviceDirectory, "videos"), adbDevice.id)
-    private val timeoutSeconds = args.chunkTimeoutSeconds
+@SessionScope
+class ScreenRecorder @Inject constructor() {
+
+    @Inject internal lateinit var adbDevice: AdbDevice
+    @Inject internal lateinit var args: Args
+    @Inject internal lateinit var processRunner: ProcessRunner
+
     private var videoRecordJob: Job? = null
     private var videoFileName: File? = null
 
@@ -35,7 +39,7 @@ class ScreenRecorder(private val adbDevice: AdbDevice,
 
         processRunner.runAdb(commandAndArgs = listOf(
                 "-s", adbDevice.id,
-                "shell", "screenrecord $videoFileName --time-limit $timeoutSeconds --size 720x1440"
+                "shell", "screenrecord $videoFileName --time-limit ${args.chunkTimeoutSeconds} --size 720x1440"
         ),
                 destroyOnUnsubscribe = true)
                 .ofType(Notification.Exit::class.java)
@@ -48,6 +52,7 @@ class ScreenRecorder(private val adbDevice: AdbDevice,
     }
 
     private fun getVideoFile(testDetails: TestDetails): File {
+        val videosDir = File(File(args.testFilesPullDeviceDirectory, "videos"), adbDevice.id)
         val testFolder = File(File(videosDir, testDetails.testClass), testDetails.testName)
         return File(testFolder, "test_recording.mp4")
     }

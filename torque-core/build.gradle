@@ -1,4 +1,5 @@
 apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'org.junit.platform.gradle.plugin'
 apply from: file('../gradle/gradle-mvn-push.gradle')
 
@@ -21,6 +22,8 @@ dependencies {
     implementation libraries.dexParser
     implementation libraries.kotlinCoroutines
     implementation libraries.kotlinCoroutinesRx2
+    implementation libraries.dagger
+    kapt libraries.daggerCompiler
 }
 
 dependencies {

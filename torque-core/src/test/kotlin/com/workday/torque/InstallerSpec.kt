@@ -47,7 +47,10 @@ class InstallerSpec : Spek(
                         runAdb(allAny())
                     } returns successfulNotification
                 }
-                Installer(adbDevice, processRunner)
+                Installer().apply {
+                    this.adbDevice = adbDevice
+                    this.processRunner = processRunner
+                }
             }
 
 
@@ -68,7 +71,10 @@ class InstallerSpec : Spek(
                         runAdb(allAny())
                     } returnsMany listOf(failedNotification, failedNotification, successfulNotification)
                 }
-                Installer(adbDevice, processRunner)
+                Installer().apply {
+                    this.adbDevice = adbDevice
+                    this.processRunner = processRunner
+                }
             }
 
             on("Max retry count higher than failed occurrences") {
@@ -115,7 +121,10 @@ class InstallerSpec : Spek(
                         runAdb(listOf("-s", adbDevice.id, "uninstall", previousInstalledApkPackageName), any(), any(), any(), any(), any(), any())
                     } returnsMany listOf(failedNotification, failedNotification, successfulNotification)
                 }
-                Installer(adbDevice, processRunner)
+                Installer().apply {
+                    this.adbDevice = adbDevice
+                    this.processRunner = processRunner
+                }
             }
 
             on("Max retry count higher than failed occurrences") {

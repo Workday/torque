@@ -80,7 +80,10 @@ class LogcatRecorderSpec : Spek(
                 }
             }
             val logcatRecorder by memoized {
-                LogcatRecorder(mockk(relaxed = true), logcatFileIo)
+                LogcatRecorder().apply {
+                    this.adbDevice = mockk(relaxed = true)
+                    this.logcatFileIO = logcatFileIo
+                }
             }
 
             it("redirects logcat, tails that file and emits 4 TestLogcat with correct fields") {
@@ -137,7 +140,10 @@ class LogcatRecorderSpec : Spek(
                 }
             }
             val logcatRecorder by memoized {
-                LogcatRecorder(mockk(relaxed = true), logcatFileIo)
+                LogcatRecorder().apply {
+                    this.adbDevice = mockk(relaxed = true)
+                    this.logcatFileIO = logcatFileIo
+                }
             }
 
             it("redirects logcat, tails that file and emits 2 TestLogcat with the first having an artificial end log and logs the next one normally") {
@@ -183,7 +189,10 @@ class LogcatRecorderSpec : Spek(
                 }
             }
             val logcatRecorder by memoized {
-                LogcatRecorder(mockk(relaxed = true), logcatFileIo)
+                LogcatRecorder().apply {
+                    this.adbDevice = mockk(relaxed = true)
+                    this.logcatFileIO = logcatFileIo
+                }
             }
 
             it("does not call writeLogcatFileForTest") {
@@ -213,7 +222,10 @@ class LogcatRecorderSpec : Spek(
                 }
             }
             val logcatRecorder by memoized {
-                LogcatRecorder(mockk(relaxed = true), logcatFileIo)
+                LogcatRecorder().apply {
+                    this.adbDevice = mockk(relaxed = true)
+                    this.logcatFileIO = logcatFileIo
+                }
             }
 
             it("does not call writeLogcatFileForTest") {

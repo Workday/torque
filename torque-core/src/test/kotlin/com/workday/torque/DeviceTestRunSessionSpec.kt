@@ -1,5 +1,6 @@
 package com.workday.torque
 
+import com.workday.torque.dagger.RootComponent
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestPool
 import com.workday.torque.utils.FakeAdbTestResultFactory.createFailedTest
@@ -16,7 +17,7 @@ import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 
-class TestRunFactorySpec : Spek(
+class DeviceTestRunSessionSpec : Spek(
 {
     context("Run test chunk") {
         val adbDevice = AdbDevice("id", "model", online = true)
@@ -27,8 +28,6 @@ class TestRunFactorySpec : Spek(
                 every { pullFolder(any(), any()) } returns Completable.complete()
             }
         }
-        val installer = mockk<Installer>(relaxed = true)
-        val testChunkRunner = mockk<TestChunkRunner>(relaxed = true)
 
         val passedTestChunkResults = listOf(createPassedTest(adbDevice),
                                             createPassedTest(adbDevice),
@@ -52,7 +51,18 @@ class TestRunFactorySpec : Spek(
                 val args = Args().apply {
                     appApkPath = "somePath"
                 }
-                TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
+                val rootComponent = mockk<RootComponent>(relaxed = true) {
+                    every { this@mockk.args } returns args
+                }
+                val deviceTestRunSession = DeviceTestRunSession(adbDevice, testPool, rootComponent).apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.logcatRecorder = logcatRecorder
+                    this.filePuller = filePuller
+                    this.testChunkRetryer = chunkRetryer
+                }
+                deviceTestRunSession.run()
                         .test()
                         .await()
 
@@ -80,7 +90,18 @@ class TestRunFactorySpec : Spek(
                         testFilesPullDeviceDirectory = "somePath"
                         testFilesPullHostDirectory = "somePath"
                     }
-                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
+                    val rootComponent = mockk<RootComponent>(relaxed = true) {
+                        every { this@mockk.args } returns args
+                    }
+                    val deviceTestRunSession = DeviceTestRunSession(adbDevice, testPool, rootComponent).apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.logcatRecorder = logcatRecorder
+                    this.filePuller = filePuller
+                    this.testChunkRetryer = chunkRetryer
+                }
+                deviceTestRunSession.run()
                             .test()
                             .await()
 
@@ -95,8 +116,18 @@ class TestRunFactorySpec : Spek(
                     val args = Args().apply {
                         appApkPath = "somePath"
                     }
-
-                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
+                    val rootComponent = mockk<RootComponent>(relaxed = true) {
+                        every { this@mockk.args } returns args
+                    }
+                    val deviceTestRunSession = DeviceTestRunSession(adbDevice, testPool, rootComponent).apply {
+                    this.adbDevice = adbDevice
+                    this.args = args
+                    this.logcatFileIO = logcatFileIO
+                    this.logcatRecorder = logcatRecorder
+                    this.filePuller = filePuller
+                    this.testChunkRetryer = chunkRetryer
+                }
+                deviceTestRunSession.run()
                             .test()
                             .await()
 

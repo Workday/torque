@@ -1,18 +1,22 @@
 package com.workday.torque
 
 import com.gojuno.commander.os.Notification
+import com.workday.torque.dagger.SessionScope
 import com.workday.torque.pooling.TestChunk
 import io.reactivex.Single
 import kotlinx.coroutines.rx2.await
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class TestChunkRunner(
-        private val adbDevice: AdbDevice,
-        private val logcatFileIO: LogcatFileIO,
-        private val installer: Installer,
-        private val processRunner: ProcessRunner = ProcessRunner(),
-        private val instrumentationReader: InstrumentationReader = InstrumentationReader()
-) {
+@SessionScope
+class TestChunkRunner @Inject constructor() {
+
+    @Inject internal lateinit var adbDevice: AdbDevice
+    @Inject internal lateinit var logcatFileIO: LogcatFileIO
+    @Inject internal lateinit var installer: Installer
+    @Inject internal lateinit var processRunner: ProcessRunner
+    @Inject internal lateinit var instrumentationReader: InstrumentationReader
+
     suspend fun run(args: Args, testChunk: TestChunk): List<AdbDeviceTestResult> {
         return try {
             adbDevice.log("Starting tests...")

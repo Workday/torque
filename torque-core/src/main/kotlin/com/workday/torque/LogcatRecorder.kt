@@ -1,8 +1,10 @@
 package com.workday.torque
 
+import com.workday.torque.dagger.SessionScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val TEST_RUNNER_STRING = "TestRunner"
 private const val STARTED_STRING = "started"
@@ -14,9 +16,12 @@ private const val TEST_RUNNER_FINISHED_STRING = "$TEST_RUNNER_STRING: $FINISHED_
 data class TestDetails(val testClass: String, val testName: String)
 data class TestLogcat(val testDetails: TestDetails, var logcat: String = "")
 
-class LogcatRecorder(
-        private val adbDevice: AdbDevice,
-        private val logcatFileIO: LogcatFileIO) {
+@SessionScope
+class LogcatRecorder @Inject constructor() {
+
+    @Inject internal lateinit var adbDevice: AdbDevice
+    @Inject internal lateinit var logcatFileIO: LogcatFileIO
+
     private var tailAndSaveLogcatJob: Job? = null
 
     suspend fun start(coroutineScope: CoroutineScope) {
