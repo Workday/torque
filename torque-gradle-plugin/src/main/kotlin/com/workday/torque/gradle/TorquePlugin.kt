@@ -88,12 +88,7 @@ class TorquePlugin : Plugin<Project> {
     private fun configureTaskOptionsAndRun(torqueArgs: Args, task: TorqueRunTask) {
         torqueArgs.configureTaskOptions(task)
         println("Starting Torque run with args: $torqueArgs")
-        try {
-            Torque(torqueArgs).run()
-        } catch (e: Exception) {
-            println("Torque run failed with exception: ${e.message}")
-            e.printStackTrace()
-        }
+        Torque(torqueArgs).run()
     }
 
     private fun Args.configureTaskOptions(task: TorqueRunTask) {
