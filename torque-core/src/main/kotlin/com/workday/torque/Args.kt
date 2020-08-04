@@ -121,7 +121,7 @@ data class Args(
                 names = ["--test-coverage-enabled"],
                 description = "Instrument test coverage file generation. Setting this to true will create a coverage-reports directory in your test file directory containing any generated coverage files"
         )
-        var testCoverageEnabled: Boolean = true,
+        var testCoverageEnabled: Boolean = false,
 
         @Parameter(
                 names = ["--test-files-pull-host-directory"],

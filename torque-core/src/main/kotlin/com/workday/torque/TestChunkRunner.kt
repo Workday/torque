@@ -45,7 +45,7 @@ class TestChunkRunner(
         val coverageFileName = testChunk.testMethods.joinToString(",") { it.testName } + ".ec"
         val testMethodsArgs = "-e class " + testChunk.testMethods.joinToString(",") { it.testName }
         val timeout = Timeout(chunkTimeoutSeconds.toInt(), TimeUnit.SECONDS)
-        val runCommand = if(args.pullTestFiles) {
+        val runCommand = if(args.testCoverageEnabled && args.pullTestFiles) {
             "am instrument -w -r -e coverage true -e coverageFile ${args.testFilesPullDeviceDirectory}/coverage-reports/$coverageFileName $testMethodsArgs $testPackageName/$testRunnerClass"
         } else {
             "am instrument -w -r $testMethodsArgs $testPackageName/$testRunnerClass"
