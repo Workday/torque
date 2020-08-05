@@ -34,7 +34,6 @@ class TestChunkRunner(
                 ),
                         destroyOnUnsubscribe = true)
                 .ofType(Notification.Exit::class.java)
-                .map { true }
                 .doOnError { error -> adbDevice.log("Failed to mkdir on ${adbDevice.tag}, filepath: ${args.testFilesPullDeviceDirectory}/coverage-reports, failed: $error") }
                 .ignoreElements()
     }
