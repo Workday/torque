@@ -13,6 +13,7 @@ android:
 script:
 #  https://issues.sonatype.org/browse/OSSRH-38347 Change to auto release or switch repository (jfrog etc.)
 - export ANDROID_HOME=~/android-sdk-linux
+- export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
 - "./gradlew clean build uploadArchives -s -PNEXUS_USERNAME=$NEXUS_USERNAME -PNEXUS_PASSWORD=$NEXUS_PASSWORD"
 
 deploy:
