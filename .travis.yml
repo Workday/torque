@@ -1,8 +1,20 @@
-language: java
+language: android
+dist: trusty
+android:
+  components:
+    - tools
+    - platform-tools
+    - build-tools-26.0.2
+    - android-26
+    - add-on
+    - extra
+  licenses:
+    - 'android-sdk-preview-license-52d11cd2'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
 script:
 #  https://issues.sonatype.org/browse/OSSRH-38347 Change to auto release or switch repository (jfrog etc.)
-#- "./gradlew clean build uploadArchives -s -PNEXUS_USERNAME=$NEXUS_USERNAME -PNEXUS_PASSWORD=$NEXUS_PASSWORD"
-- "./gradlew clean build -s"
+- "./gradlew clean build uploadArchives -s -PNEXUS_USERNAME=$NEXUS_USERNAME -PNEXUS_PASSWORD=$NEXUS_PASSWORD"
 
 deploy:
   provider: releases

@@ -2,11 +2,13 @@ package com.workday.torque
 
 import com.gojuno.commander.os.Notification
 import com.workday.torque.pooling.TestChunk
+import io.reactivex.Completable
 import io.reactivex.Single
 import kotlinx.coroutines.rx2.await
 import java.util.concurrent.TimeUnit
 
 class TestChunkRunner(
+        private val args: Args,
         private val adbDevice: AdbDevice,
         private val logcatFileIO: LogcatFileIO,
         private val installer: Installer,
@@ -17,6 +19,7 @@ class TestChunkRunner(
         return try {
             adbDevice.log("Starting tests...")
             installer.ensureTestPackageInstalled(args, testChunk)
+            makeTestFileDirectories(args).await()
             runAndParseTests(args.chunkTimeoutSeconds, testChunk).await()
         } catch (e: Exception) {
             adbDevice.log("TestChunk run crashed with exception: ${e.message}")
@@ -24,23 +27,38 @@ class TestChunkRunner(
         }
     }
 
+    private fun makeTestFileDirectories(args: Args): Completable {
+        return processRunner.runAdb(commandAndArgs = listOf(
+                        "-s", adbDevice.id,
+                        "shell", "mkdir -p ${args.testFilesPullDeviceDirectory}/coverage-reports"
+                ),
+                        destroyOnUnsubscribe = true)
+                .ofType(Notification.Exit::class.java)
+                .doOnError { error -> adbDevice.log("Failed to mkdir on ${adbDevice.tag}, filepath: ${args.testFilesPullDeviceDirectory}/coverage-reports, failed: $error") }
+                .ignoreElements()
+    }
+
     private fun runAndParseTests(chunkTimeoutSeconds: Long, testChunk: TestChunk): Single<List<AdbDeviceTestResult>> {
         val testPackageName = testChunk.testModuleInfo.moduleInfo.apkPackage.value
         val testRunnerClass = testChunk.testModuleInfo.testRunner.value
+        val coverageFileName = testChunk.testMethods.joinToString(",") { it.testName } + ".ec"
         val testMethodsArgs = "-e class " + testChunk.testMethods.joinToString(",") { it.testName }
         val timeout = Timeout(chunkTimeoutSeconds.toInt(), TimeUnit.SECONDS)
-
-        return processRunner.runAdb(
-                commandAndArgs = listOf(
-                        "-s", adbDevice.id,
-                        "shell", "am instrument -w -r $testMethodsArgs $testPackageName/$testRunnerClass"
-                ),
-                timeout = timeout)
+        val runCommand = if(args.testCoverageEnabled && shouldPullTestFiles(args)) {
+            "am instrument -w -r -e coverage true -e \"coverageFile ${args.testFilesPullDeviceDirectory}/coverage-reports/$coverageFileName\" \"$testMethodsArgs $testPackageName/$testRunnerClass\""
+        } else {
+            "am instrument -w -r \"$testMethodsArgs $testPackageName/$testRunnerClass\""
+        }
+        return processRunner.runAdb(commandAndArgs = listOf("-s", adbDevice.id, "shell", runCommand), timeout = timeout)
                 .ofType(Notification.Start::class.java)
                 .flatMap { instrumentationReader.readTestResults(it.output, chunkTimeoutSeconds) }
                 .doOnNext { instrumentationTestResult -> logTestResult(instrumentationTestResult) }
                 .map { instrumentationTestResult -> createAdbDeviceTestResult(instrumentationTestResult) }
                 .toList()
+    }
+
+    private fun shouldPullTestFiles(args: Args) : Boolean {
+        return args.testFilesPullDeviceDirectory.isNotEmpty() && args.testFilesPullHostDirectory.isNotEmpty()
     }
 
     private fun logTestResult(testResult: InstrumentationTestResult) {
