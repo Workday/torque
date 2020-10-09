@@ -6,6 +6,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.rx2.await
 import java.io.File
+import java.util.concurrent.TimeUnit
+
+private const val TIMEOUT_BUFFER_SECONDS = 10
 
 class ScreenRecorder(private val adbDevice: AdbDevice,
                      args: Args,
@@ -37,7 +40,8 @@ class ScreenRecorder(private val adbDevice: AdbDevice,
                 "-s", adbDevice.id,
                 "shell", "screenrecord $videoFileName --time-limit $timeoutSeconds --size 720x1440"
         ),
-                destroyOnUnsubscribe = true)
+                destroyOnUnsubscribe = true,
+                timeout = Timeout(timeoutSeconds.toInt() + TIMEOUT_BUFFER_SECONDS, TimeUnit.SECONDS))
                 .ofType(Notification.Exit::class.java)
                 .map { true }
                 .doOnSubscribe { adbDevice.log("Started recording on ${adbDevice.tag}, filename: $videoFileName") }
