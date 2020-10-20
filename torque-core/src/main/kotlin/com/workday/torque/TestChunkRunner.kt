@@ -45,9 +45,9 @@ class TestChunkRunner(
         val testMethodsArgs = "-e class " + testChunk.testMethods.joinToString(",") { it.testName }
         val timeout = Timeout(chunkTimeoutSeconds.toInt(), TimeUnit.SECONDS)
         val runCommand = if(args.testCoverageEnabled && shouldPullTestFiles(args)) {
-            "am instrument -w -r -e coverage true -e \"coverageFile ${args.testFilesPullDeviceDirectory}/coverage-reports/$coverageFileName\" \"$testMethodsArgs $testPackageName/$testRunnerClass\""
+            "am instrument -w -r -e coverage true -e coverageFile ${args.testFilesPullDeviceDirectory}/coverage-reports/$coverageFileName $testMethodsArgs $testPackageName/$testRunnerClass"
         } else {
-            "am instrument -w -r \"$testMethodsArgs $testPackageName/$testRunnerClass\""
+            "am instrument -w -r $testMethodsArgs $testPackageName/$testRunnerClass"
         }
         return processRunner.runAdb(commandAndArgs = listOf("-s", adbDevice.id, "shell", runCommand), timeout = timeout)
                 .ofType(Notification.Start::class.java)
