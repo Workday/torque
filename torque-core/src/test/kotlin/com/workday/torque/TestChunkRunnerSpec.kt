@@ -5,9 +5,7 @@ import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestModuleInfo
 import com.workday.torque.utils.createTestMethodsList
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import io.reactivex.Observable
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.spek.api.Spek
@@ -24,6 +22,7 @@ class TestChunkRunnerSpec : Spek(
     context("Running a test chunk") {
         val args = Args()
         val adbDevice = mockk<AdbDevice>(relaxed = true)
+        every { adbDevice.id } returns "id"
         val logcatFileIO by memoized { mockk<LogcatFileIO>() }
         val installer = mockk<Installer>(relaxed = true)
         val processRunner by memoized { mockk<ProcessRunner>() }
@@ -38,8 +37,10 @@ class TestChunkRunnerSpec : Spek(
         }
 
         given("a chunk of 3 tests") {
-            val testPackage = ApkPackage.Valid("com.company.mymodule.test")
-            val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
+            val testPackageName = "com.company.mymodule.test"
+            val testPackage = ApkPackage.Valid(testPackageName)
+            val testRunnerClass = "android.support.test.runner.AndroidJUnitRunner"
+            val testRunner = TestRunner.Valid(testRunnerClass)
             val moduleInfo = TestModuleInfo(ModuleInfo(testPackage, ""), testRunner)
             val testChunk by memoized {
                 TestChunk(index = 0,
@@ -50,15 +51,16 @@ class TestChunkRunnerSpec : Spek(
             every { logcatFileIO.getLogcatFileForTest(any()) } returns testLogcatFile
             val instrumentationTestResult = InstrumentationTestResult(0,
                                                                       0,
-                                                                      TestDetails("className", "testName"),
+                                                                      TestDetails("test", "somemethod"),
                                                                       InstrumentationTestResult.Status.Passed,
                                                                       0)
             every { instrumentationReader.readTestResults(any(), any()) } returns Observable.just(instrumentationTestResult,
                                                                                            instrumentationTestResult,
                                                                                            instrumentationTestResult)
-            every { processRunner.runAdb(allAny()) } returns Observable.just(Notification.Start(mockk(),
-                                                                                                mockk()))
-
+            every { processRunner.runAdb(eq(listOf("-s", "id", "shell", "mkdir -p /sdcard/test-files/coverage-reports")), timeout = any(), destroyOnUnsubscribe = eq(true)) } returns Observable.just(Notification.Exit(mockk()))
+            every { processRunner.runAdb(commandAndArgs = eq(listOf("-s", "id", "shell", "am instrument -w -r -e class test#somemethod,test#somemethod,test#somemethod $testPackageName/$testRunnerClass")), timeout = any()) } returns Observable.just(Notification.Start(mockk(), mockk()))
+            val coverageFileName = "test#somemethod,test#somemethod,test#somemethod.ec"
+            every { processRunner.runAdb(commandAndArgs = eq(listOf("-s", "id", "shell", "am instrument -w -r -e coverage true -e coverageFile ${args.testFilesPullDeviceDirectory}/coverage-reports/$coverageFileName -e class test#somemethod,test#somemethod,test#somemethod $testPackageName/$testRunnerClass")), timeout = any()) } returns Observable.just(Notification.Start(mockk(), mockk()))
 
             on("timeout per chunk of 75 seconds") {
                 args.chunkTimeoutSeconds = 75
@@ -68,9 +70,7 @@ class TestChunkRunnerSpec : Spek(
                         testChunkRunner.run(args, testChunk)
                     }
 
-                    verify {
-                        processRunner.runAdb(any(), Timeout(75, TimeUnit.SECONDS))
-                    }
+                    verify { processRunner.runAdb(any(), Timeout(75, TimeUnit.SECONDS)) }
                 }
 
                 it("runs successfully and returns AdbDeviceTestResult") {
@@ -88,6 +88,33 @@ class TestChunkRunnerSpec : Spek(
                     }
 
                     assertEquals(expectedTestResults, adbDeviceTestResults)
+                }
+
+                args.testCoverageEnabled = false
+
+                it("runs the process with coverage reports enabled") {
+                    runBlocking {
+                        testChunkRunner.run(args, testChunk)
+                    }
+
+                    verify {
+                        processRunner.runAdb(eq(listOf("-s", "id", "shell", "am instrument -w -r -e class test#somemethod,test#somemethod,test#somemethod $testPackageName/$testRunnerClass")), any())
+                    }
+                }
+
+                args.apply {
+                    testCoverageEnabled = true
+                    testFilesPullHostDirectory = "hostDir"
+                }
+
+                it("runs the process with coverage reports enabled") {
+                    runBlocking {
+                        testChunkRunner.run(args, testChunk)
+                    }
+
+                    verify {
+                        processRunner.runAdb(eq(listOf("-s", "id", "shell", "am instrument -w -r -e coverage true -e coverageFile ${args.testFilesPullDeviceDirectory}/coverage-reports/$coverageFileName -e class test#somemethod,test#somemethod,test#somemethod $testPackageName/$testRunnerClass")), any())
+                    }
                 }
             }
         }

@@ -31,8 +31,7 @@ class TestChunkRunner(
         return processRunner.runAdb(commandAndArgs = listOf(
                         "-s", adbDevice.id,
                         "shell", "mkdir -p ${args.testFilesPullDeviceDirectory}/coverage-reports"
-                ),
-                        destroyOnUnsubscribe = true)
+                ), destroyOnUnsubscribe = true)
                 .ofType(Notification.Exit::class.java)
                 .doOnError { error -> adbDevice.log("Failed to mkdir on ${adbDevice.tag}, filepath: ${args.testFilesPullDeviceDirectory}/coverage-reports, failed: $error") }
                 .ignoreElements()
