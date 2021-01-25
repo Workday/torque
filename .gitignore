@@ -1,6 +1,6 @@
-gs.gradle
+.gradle
 /local.properties
-.idea/
+/.idea/
 *.iml
 .DS_Store
 build/
@@ -8,9 +8,7 @@ build/
 /captures
 /gradle/local.properties
 /docs
-torque-output/
-.gradle/
-*.output
+/torque-output*
 
 # Share code style.
 !.idea/codeStyleSettings.xml
@@ -19,7 +17,3 @@ torque-output/
 node_modules/
 npm-debug.log*
 /test/
-local.properties
-failed-install-output.txt
-successful-install-output.txt
-test-result.txt

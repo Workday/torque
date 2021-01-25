@@ -22,15 +22,13 @@ import kotlin.test.assertEquals
 class TestChunkRunnerSpec : Spek(
 {
     context("Running a test chunk") {
-        val args = Args()
         val adbDevice = mockk<AdbDevice>(relaxed = true)
         val logcatFileIO by memoized { mockk<LogcatFileIO>() }
         val installer = mockk<Installer>(relaxed = true)
         val processRunner by memoized { mockk<ProcessRunner>() }
         val instrumentationReader by memoized { mockk<InstrumentationReader>() }
         val testChunkRunner by memoized {
-            TestChunkRunner(args,
-                            adbDevice,
+            TestChunkRunner(adbDevice,
                             logcatFileIO,
                             installer,
                             processRunner,
@@ -61,7 +59,9 @@ class TestChunkRunnerSpec : Spek(
 
 
             on("timeout per chunk of 75 seconds") {
-                args.chunkTimeoutSeconds = 75
+                val args = Args().apply {
+                    chunkTimeoutSeconds = 75
+                }
 
                 it("runs the process with 75 seconds timeout") {
                     runBlocking {
@@ -85,7 +85,7 @@ class TestChunkRunnerSpec : Spek(
 
                     val adbDeviceTestResults = runBlocking {
                         testChunkRunner.run(args, testChunk)
-                    }
+                    }!!
 
                     assertEquals(expectedTestResults, adbDeviceTestResults)
                 }

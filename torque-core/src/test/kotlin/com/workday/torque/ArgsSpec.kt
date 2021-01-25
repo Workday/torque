@@ -228,21 +228,4 @@ class ArgsSpec : Spek(
             }
         }
     }
-
-    context("parse args with explicitly passed --test-coverage-enabled") {
-
-        listOf(true, false).forEach { testCoverageEnabled ->
-
-            context("--test-coverage-enabled $testCoverageEnabled") {
-
-                val args by memoized {
-                    parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--test-coverage-enabled", "$testCoverageEnabled"))
-                }
-
-                it("parses --test-coverage-enabled correctly") {
-                    assertThat(args.testCoverageEnabled).isEqualTo(testCoverageEnabled)
-                }
-            }
-        }
-    }
 })

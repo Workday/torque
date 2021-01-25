@@ -23,7 +23,7 @@ class TestRunFactory {
             logcatRecorder: LogcatRecorder = LogcatRecorder(adbDevice, logcatFileIO),
             installer: Installer = Installer(adbDevice),
             filePuller: FilePuller = FilePuller(adbDevice),
-            testChunkRunner: TestChunkRunner = TestChunkRunner(args, adbDevice, logcatFileIO, installer),
+            testChunkRunner: TestChunkRunner = TestChunkRunner(adbDevice, logcatFileIO, installer),
             testChunkRetryer: TestChunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)
     ): Single<AdbDeviceTestSession> {
         val testSession = AdbDeviceTestSession(adbDevice = adbDevice,

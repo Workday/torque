@@ -1,6 +1,6 @@
 ext.versions = [
-        androidGradlePlugin: '3.6.0',
-        kotlin             : '1.3.71',
+        androidGradlePlugin: '3.2.0',
+        kotlin             : '1.3.20',
         kotlinCoroutines   : '1.1.1',
         rxJava             : '1.3.0',
         rxJava2            : '2.2.2',
@@ -12,8 +12,8 @@ ext.versions = [
         gson               : '2.8.0',
         dexParser          : '1.1.0',
         junit              : '4.12',
-        junitPlatform      : '1.2.0',
-        spek               : '1.2.1',
+        junitPlatform      : '1.0.0-M4',
+        spek               : '1.1.2',
         assertJ            : '3.5.2',
         mockk              : '1.9',
 ]

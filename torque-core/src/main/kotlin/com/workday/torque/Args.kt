@@ -118,13 +118,6 @@ data class Args(
         var testFilesPullDeviceDirectory: String = DEFAULT_FILES_PULL_DEVICE_DIR_PATH,
 
         @Parameter(
-                names = ["--test-coverage-enabled"],
-                arity = 1,
-                description = "Instrument test coverage file generation. Setting this to true will create a coverage-reports directory in your test file directory containing any generated coverage files"
-        )
-        var testCoverageEnabled: Boolean = false,
-
-        @Parameter(
                 names = ["--test-files-pull-host-directory"],
                 description = "Directory on the Torque run host machine to pull test files into. Setting this and --file-pull-device-directory will enable pulling of the folders." +
                         "This folder would have the structure of hostDirectory\\deviceDirectory"
