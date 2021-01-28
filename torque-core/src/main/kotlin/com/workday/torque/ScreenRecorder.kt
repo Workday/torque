@@ -8,7 +8,7 @@ import kotlinx.coroutines.rx2.await
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-private const val TIMEOUT_BUFFER_SECONDS = 10
+internal const val TIMEOUT_BUFFER_SECONDS = 10
 
 class ScreenRecorder(private val adbDevice: AdbDevice,
                      args: Args,

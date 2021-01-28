@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
+import java.util.concurrent.TimeUnit
 
 class ScreenRecorderSpec : Spek(
 {
@@ -47,7 +48,18 @@ class ScreenRecorderSpec : Spek(
                     it[0] == "-s" && it[1] == adbDevice.id && it[2] == "shell" &&
                             it[3] == "screenrecord someDeviceDir/videos/id/someTestClass/someTestMethod/test_recording.mp4 --time-limit $DEFAULT_PER_CHUNK_TIMEOUT_SECONDS --size 720x1440"
                 }
-                processRunner.runAdb(recordCommandAndArgsMatcher, any(), any(), any(), any(), any(), any())
+                val expectedTimeout = Timeout(
+                        DEFAULT_PER_CHUNK_TIMEOUT_SECONDS.toInt() + TIMEOUT_BUFFER_SECONDS,
+                        TimeUnit.SECONDS)
+
+                processRunner.runAdb(commandAndArgs = recordCommandAndArgsMatcher,
+                        timeout = expectedTimeout,
+                        redirectOutputTo = any(),
+                        keepOutputOnExit = any(),
+                        unbufferedOutput = any(),
+                        print = any(),
+                        destroyOnUnsubscribe = any())
+
                 val rmCommandAndArgsMatcher = match<List<String>> {
                     it[0] == "-s" && it[1] == adbDevice.id && it[2] == "shell" &&
                             it[3] == "rm someDeviceDir/videos/id/someTestClass/someTestMethod/test_recording.mp4"
