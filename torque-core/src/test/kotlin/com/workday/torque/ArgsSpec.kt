@@ -19,8 +19,8 @@ class ArgsSpec : Spek(
         it("parses passes testApkPaths and uses default values for other fields") {
             assertThat(args).isEqualTo(Args(
                     testApkPaths = listOf("test-apk-path-1", "test-apk-path-2"),
-                    annotations = emptyList(),
-                    notAnnotations = DEFAULT_NOT_ANNOTATIONS,
+                    allowedAnnotations = emptyList(),
+                    prohibitedAnnotations = DEFAULT_NOT_ANNOTATIONS,
                     testClassRegexes = emptyList(),
                     appApkPath = "",
                     chunkSize = DEFAULT_CHUNK_SIZE,
@@ -38,22 +38,22 @@ class ArgsSpec : Spek(
     context("parse args with explicitly passed --annotations") {
 
         val args by memoized {
-            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--annotations", "Annotation1", "Annotation2"))
+            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--allowed-annotations", "Annotation1", "Annotation2"))
         }
 
-        it("parses --annotations correctly") {
-            assertThat(args.annotations).isEqualTo(listOf("Annotation1", "Annotation2"))
+        it("parses --allowed-annotations correctly") {
+            assertThat(args.allowedAnnotations).isEqualTo(listOf("Annotation1", "Annotation2"))
         }
     }
 
-    context("parse args with explicitly passed --not-annotations") {
+    context("parse args with explicitly passed --prohibited-annotations") {
 
         val args by memoized {
-            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--not-annotations", "NotAnnotation1", "NotAnnotation2"))
+            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--prohibited-annotations", "NotAnnotation1", "NotAnnotation2"))
         }
 
-        it("parses --not-annotations correctly") {
-            assertThat(args.notAnnotations).isEqualTo(listOf("NotAnnotation1", "NotAnnotation2"))
+        it("parses --prohibited-annotations correctly") {
+            assertThat(args.prohibitedAnnotations).isEqualTo(listOf("NotAnnotation1", "NotAnnotation2"))
         }
     }
 

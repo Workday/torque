@@ -10,7 +10,7 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
         return args.testApkPaths.fold(mutableListOf()) { accumulatedModules, testApkPath ->
             accumulatedModules.apply {
                 val testMethods = apkTestParser.getTests(testApkPath)
-                        .filterAnnotations(annotations = args.annotations, notAnnotations = args.notAnnotations)
+                        .filterAnnotations(allowedAnnotations = args.allowedAnnotations, prohibitedAnnotations = args.prohibitedAnnotations)
                         .filterClassRegexes(args.testClassRegexes)
                 println("Filtered tests count: ${testMethods.size}")
                 val moduleInfo = createModuleInfo(testApkPath)
@@ -20,18 +20,18 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
     }
 
     private fun List<TestMethod>.filterAnnotations(
-            annotations: List<String>,
-            notAnnotations: List<String>
+            allowedAnnotations: List<String>,
+            prohibitedAnnotations: List<String>
     ): List<TestMethod> {
-        return filter { it.isValidAfterAnnotationsCheck(annotations = annotations, notAnnotations = notAnnotations) }
+        return filter { it.isValidAfterAnnotationsCheck(allowedAnnotations = allowedAnnotations, prohibitedAnnotations = prohibitedAnnotations) }
     }
 
     private fun TestMethod.isValidAfterAnnotationsCheck(
-            annotations: List<String>,
-            notAnnotations: List<String>
+            allowedAnnotations: List<String>,
+            prohibitedAnnotations: List<String>
     ): Boolean {
-        return annotations.all { annotationNames.hasAnnotation(it) }
-                && notAnnotations.all { annotationNames.hasAnnotation(it).not() }
+        return annotations.all { allowedAnnotations.hasAnnotation(it.name) }
+                && prohibitedAnnotations.all { allowedAnnotations.hasAnnotation(it).not() }
     }
 
     private fun List<String>.hasAnnotation(annotation: String): Boolean {
