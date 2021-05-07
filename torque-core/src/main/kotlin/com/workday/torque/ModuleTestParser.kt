@@ -10,7 +10,7 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
         return args.testApkPaths.fold(mutableListOf()) { accumulatedModules, testApkPath ->
             accumulatedModules.apply {
                 val testMethods = apkTestParser.getTests(testApkPath)
-                        .filterAnnotations(allowedAnnotations = args.allowedAnnotations, prohibitedAnnotations = args.prohibitedAnnotations)
+                        .filterAnnotations(includedAnnotations = args.includedAnnotations, excludedAnnotations = args.excludedAnnotations)
                         .filterClassRegexes(args.testClassRegexes)
                 println("Filtered tests count: ${testMethods.size}")
                 val moduleInfo = createModuleInfo(testApkPath)
@@ -20,18 +20,18 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
     }
 
     private fun List<TestMethod>.filterAnnotations(
-            allowedAnnotations: List<String>,
-            prohibitedAnnotations: List<String>
+			includedAnnotations: List<String>,
+			excludedAnnotations: List<String>
     ): List<TestMethod> {
-        return filter { it.isValidAfterAnnotationsCheck(allowedAnnotations = allowedAnnotations, prohibitedAnnotations = prohibitedAnnotations) }
+        return filter { it.isValidAfterAnnotationsCheck(includedAnnotations = includedAnnotations, excludedAnnotations = excludedAnnotations) }
     }
 
     private fun TestMethod.isValidAfterAnnotationsCheck(
-            allowedAnnotations: List<String>,
-            prohibitedAnnotations: List<String>
+			includedAnnotations: List<String>,
+			excludedAnnotations: List<String>
     ): Boolean {
-        return annotations.all { allowedAnnotations.hasAnnotation(it.name) }
-                && prohibitedAnnotations.all { allowedAnnotations.hasAnnotation(it).not() }
+        return annotations.all { includedAnnotations.hasAnnotation(it.name) }
+                && excludedAnnotations.all { includedAnnotations.hasAnnotation(it).not() }
     }
 
     private fun List<String>.hasAnnotation(annotation: String): Boolean {

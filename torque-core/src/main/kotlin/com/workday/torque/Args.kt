@@ -25,20 +25,20 @@ data class Args(
         var testApkPaths: List<String> = emptyList(),
 
         @Parameter(
-                names = ["--allowed-annotations"],
+                names = ["--included-annotations"],
                 variableArity = true,
                 description = "Run only test methods WITH specified annotations. If multiple annotations are specified, will only run tests that are annotated with all of them. " +
                         "None by default and runs all tests. If used with other options, will run the intersection of them."
         )
-        var allowedAnnotations: List<String> = emptyList(),
+        var includedAnnotations: List<String> = emptyList(),
 
         @Parameter(
-                names = ["--prohibited-annotations"],
+                names = ["--excluded-annotations"],
                 variableArity = true,
                 description = "Run only test methods WITHOUT specified annotations. If multiple annotations are specified, will only run tests that are not annotated with any of them. " +
                         "Contains @Ignore by default. If used with other options, will run the intersection of them."
         )
-        var prohibitedAnnotations: List<String> = DEFAULT_NOT_ANNOTATIONS,
+        var excludedAnnotations: List<String> = DEFAULT_NOT_ANNOTATIONS,
 
         @Parameter(
                 names = ["--class-regex"],
