@@ -19,8 +19,8 @@ class ArgsSpec : Spek(
         it("parses passes testApkPaths and uses default values for other fields") {
             assertThat(args).isEqualTo(Args(
                     testApkPaths = listOf("test-apk-path-1", "test-apk-path-2"),
-                    annotations = emptyList(),
-                    notAnnotations = DEFAULT_NOT_ANNOTATIONS,
+                    includedAnnotations = emptyList(),
+                    excludedAnnotations = DEFAULT_NOT_ANNOTATIONS,
                     testClassRegexes = emptyList(),
                     appApkPath = "",
                     chunkSize = DEFAULT_CHUNK_SIZE,
@@ -35,25 +35,25 @@ class ArgsSpec : Spek(
         }
     }
 
-    context("parse args with explicitly passed --annotations") {
+    context("parse args with explicitly passed --included-annotations") {
 
         val args by memoized {
-            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--annotations", "Annotation1", "Annotation2"))
+            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--included-annotations", "Annotation1", "Annotation2"))
         }
 
-        it("parses --annotations correctly") {
-            assertThat(args.annotations).isEqualTo(listOf("Annotation1", "Annotation2"))
+        it("parses --included-annotations correctly") {
+            assertThat(args.includedAnnotations).isEqualTo(listOf("Annotation1", "Annotation2"))
         }
     }
 
-    context("parse args with explicitly passed --not-annotations") {
+    context("parse args with explicitly passed --excluded-annotations") {
 
         val args by memoized {
-            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--not-annotations", "NotAnnotation1", "NotAnnotation2"))
+            parseArgs(rawArgsWithOnlyRequiredFields + arrayOf("--excluded-annotations", "NotAnnotation1", "NotAnnotation2"))
         }
 
-        it("parses --not-annotations correctly") {
-            assertThat(args.notAnnotations).isEqualTo(listOf("NotAnnotation1", "NotAnnotation2"))
+        it("parses --excluded-annotations correctly") {
+            assertThat(args.excludedAnnotations).isEqualTo(listOf("NotAnnotation1", "NotAnnotation2"))
         }
     }
 

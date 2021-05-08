@@ -10,7 +10,7 @@ ext.versions = [
         apacheCommonsIo    : '2.5',
         apacheCommonsLang  : '3.5',
         gson               : '2.8.0',
-        dexParser          : '1.1.0',
+        dexParser          : '2.3.1',
         junit              : '4.12',
         junitPlatform      : '1.2.0',
         spek               : '1.2.1',

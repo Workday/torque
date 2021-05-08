@@ -92,12 +92,12 @@ class TorquePlugin : Plugin<Project> {
     }
 
     private fun Args.configureTaskOptions(task: TorqueRunTask) {
-        if (task.annotations.isNotEmpty()) {
-            annotations = task.annotations
+        if (task.includedAnnotations.isNotEmpty()) {
+            includedAnnotations = task.includedAnnotations
         }
 
-        if (task.notAnnotations.isNotEmpty()) {
-            notAnnotations = task.notAnnotations
+        if (task.excludedAnnotations.isNotEmpty()) {
+            excludedAnnotations = task.excludedAnnotations
         }
 
         if (task.testClassRegexes.isNotEmpty()) {
