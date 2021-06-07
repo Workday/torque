@@ -1,11 +1,11 @@
 ext.versions = [
-        androidGradlePlugin: '3.6.0',
-        kotlin             : '1.3.71',
+        androidGradlePlugin: '4.2.0',
+        kotlin             : '1.4.30',
         kotlinCoroutines   : '1.1.1',
         rxJava             : '1.3.0',
         rxJava2            : '2.2.2',
         rxJava2Interop     : '0.13.2',
-        jCommander         : '1.71',
+        jCommander         : '1.81',
         commander          : '0.1.7',
         apacheCommonsIo    : '2.5',
         apacheCommonsLang  : '3.5',
@@ -45,5 +45,5 @@ ext.libraries = [
 ]
 
 ext.internal = [
-        torqueCore             : ":torque-core",
+        torqueCore: ":torque-core",
 ]

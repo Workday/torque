@@ -6,25 +6,22 @@ buildscript {
     apply from: 'dependencies.gradle'
 
     repositories {
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
         classpath libraries.kotlinGradle
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
         classpath "org.junit.platform:junit-platform-gradle-plugin:$versions.junitPlatform"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
 
 allprojects {
     repositories {
-        jcenter()
+        mavenCentral()
+        jcenter() // Remove when jcommander is transitioned to mavenCentral
     }
     version = VERSION_NAME
     group = GROUP
-
-    apply plugin: 'com.github.ben-manes.versions'
 }
 
 def gitTag() {
