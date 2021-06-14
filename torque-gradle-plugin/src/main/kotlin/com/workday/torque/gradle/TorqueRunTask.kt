@@ -11,7 +11,7 @@ open class TorqueRunTask: DefaultTask() {
     var includedAnnotations: List<String> = emptyList()
 
     @get: Input
-    @set: Option(description = "annotations for tests not to be ran")
+    @set: Option(description = "annotations for tests to be ignored")
     var excludedAnnotations: List<String> = emptyList()
 
     @get: Input

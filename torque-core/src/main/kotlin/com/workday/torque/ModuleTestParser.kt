@@ -1,5 +1,6 @@
 package com.workday.torque
 
+import com.linkedin.dex.parser.TestAnnotation
 import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestModule
@@ -30,12 +31,11 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
 			includedAnnotations: List<String>,
 			excludedAnnotations: List<String>
     ): Boolean {
-        return annotations.all { includedAnnotations.hasAnnotation(it.name) }
-                && excludedAnnotations.all { includedAnnotations.hasAnnotation(it).not() }
+        return includedAnnotations.all { annotations.hasAnnotation(it) } && excludedAnnotations.all { annotations.hasAnnotation(it).not() }
     }
 
-    private fun List<String>.hasAnnotation(annotation: String): Boolean {
-        return any { it.contains(annotation) }
+    private fun List<TestAnnotation>.hasAnnotation(annotation: String): Boolean {
+        return any { it.name.contains(annotation) }
     }
 
     private fun List<TestMethod>.filterClassRegexes(regexStrings: List<String>): List<TestMethod> {

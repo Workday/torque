@@ -94,11 +94,11 @@ class ModuleTestParserSpec : Spek(
 			}
 		}
 
-		given("MediumTest Annotations and with default Ignore NotAnnotations") {
+		given("MediumTest Annotations and with default Ignore Excluded Annotations") {
 			val args = Args().apply {
 				testApkPaths = listOf(testApkPath)
 				appApkPath = targetApkPath
-				includedAnnotations = listOf("androidx.test.filters.MediumTest")
+				includedAnnotations = listOf("MediumTest")
 			}
 
 			it("filters to MediumTests only") {
@@ -109,11 +109,11 @@ class ModuleTestParserSpec : Spek(
 			}
 		}
 
-		given("MediumTest FlakyTest Annotations and with default Ignore NotAnnotations") {
+		given("MediumTest FlakyTest Annotations and with default Ignore Excluded Annotations") {
 			val args = Args().apply {
 				testApkPaths = listOf(testApkPath)
 				appApkPath = targetApkPath
-				includedAnnotations = listOf("androidx.test.filters.MediumTest", "androidx.test.filters.FlakyTest")
+				includedAnnotations = listOf("MediumTest", "FlakyTest")
 			}
 
 			it("filters to MediumTest FlakyTest tests only") {
@@ -128,7 +128,7 @@ class ModuleTestParserSpec : Spek(
 			val args = Args().apply {
 				testApkPaths = listOf(testApkPath)
 				appApkPath = targetApkPath
-				excludedAnnotations = listOf("androidx.test.filters.FlakyTest")
+				excludedAnnotations = listOf("FlakyTest")
 			}
 
 			it("filters out FlakyTest tests only") {
@@ -242,8 +242,8 @@ class ModuleTestParserSpec : Spek(
 			val args = Args().apply {
 				testApkPaths = listOf(testApkPath)
 				appApkPath = targetApkPath
-				includedAnnotations = listOf("androidx.test.filters.MediumTest")
-				excludedAnnotations = listOf("androidx.test.filters.FlakyTest")
+				includedAnnotations = listOf("MediumTest")
+				excludedAnnotations = listOf("FlakyTest")
 				testClassRegexes = listOf("[a-zA-Z]+SpecificTest")
 			}
 
