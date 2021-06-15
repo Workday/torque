@@ -1,9 +1,9 @@
 package com.workday.torque
 
 import com.linkedin.dex.parser.TestMethod
-import com.workday.torque.utils.RUNS_WITH_ANDROID_ANNOTATION
-import com.workday.torque.utils.TEST_ANNOTATION
-import com.workday.torque.utils.THROWS_EXCEPTION_ANNOTATION
+import com.workday.torque.utils.RUNS_WITH_ANDROID_ANNOTATION_QUALIFIED
+import com.workday.torque.utils.TEST_ANNOTATION_QUALIFIED
+import com.workday.torque.utils.THROWS_EXCEPTION_ANNOTATION_QUALIFIED
 import com.workday.torque.utils.assertAnnotationArrays
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.spek.api.Spek
@@ -31,9 +31,9 @@ class ApkTestParserSpec : Spek({
         it("parses tests list correctly") {
             val expectedTestMethods = listOf(
                     TestMethod("test.test.myapplication.ExampleInstrumentedTest#useAppContext",
-                            listOf(RUNS_WITH_ANDROID_ANNOTATION,
-                                    THROWS_EXCEPTION_ANNOTATION,
-                                    TEST_ANNOTATION)
+                            listOf(RUNS_WITH_ANDROID_ANNOTATION_QUALIFIED,
+                                    THROWS_EXCEPTION_ANNOTATION_QUALIFIED,
+                                    TEST_ANNOTATION_QUALIFIED)
                     ))
             val actualTestMethods = apkTestParser.getTests(testApkPath)
             expectedTestMethods.zip(actualTestMethods).forEach { (expected, actual) ->

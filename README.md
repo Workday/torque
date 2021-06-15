@@ -76,7 +76,7 @@ With arguments :
 ```console
 java -jar torque-runner-$torque_version.jar \
 --test-apks myLibrary1-androidTest.apk myLibrary2-androidTest.apk \
---annotations MediumTest \
+--includedAnnotations MediumTest \
 --chunk-size 8 \
 --output-directory artifacts/torque-output
 ```
