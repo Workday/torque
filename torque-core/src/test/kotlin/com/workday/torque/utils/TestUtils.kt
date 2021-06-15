@@ -8,13 +8,13 @@ import org.assertj.core.api.Assertions
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-val THROWS_EXCEPTION_ANNOTATION = TestAnnotation("dalvik.annotation.Throws", values = mapOf("value" to DecodedValue.DecodedArrayValue(values= arrayOf(DecodedValue.DecodedType(value="Ljava/lang/Exception;")))), inherited = false)
-val TEST_ANNOTATION = TestAnnotation(name = "org.junit.Test", values = mapOf(), inherited = false)
-val RUNS_WITH_ANDROID_ANNOTATION = TestAnnotation("org.junit.runner.RunWith", values = mapOf("value" to DecodedValue.DecodedType(value="Landroid/support/test/runner/AndroidJUnit4;")), inherited = true)
-val MEDIUM_TEST_ANNOTATION = TestAnnotation("MediumTest", values = mapOf(), inherited = false)
-val METADATA_ANNOTATION = TestAnnotation("kotlin.Metadata", values = mapOf(), inherited = false)
-val FLAKY_TEST_ANNOTATION = TestAnnotation("FlakyTest", values = mapOf(), inherited = false)
-val IGNORE_TEST_ANNOTATION = TestAnnotation("org.junit.Ignore", values = mapOf(), inherited = false)
+val THROWS_EXCEPTION_ANNOTATION_QUALIFIED = TestAnnotation("dalvik.annotation.Throws", values = mapOf("value" to DecodedValue.DecodedArrayValue(values= arrayOf(DecodedValue.DecodedType(value="Ljava/lang/Exception;")))), inherited = false)
+val TEST_ANNOTATION_QUALIFIED = TestAnnotation(name = "org.junit.Test", values = mapOf(), inherited = false)
+val RUNS_WITH_ANDROID_ANNOTATION_QUALIFIED = TestAnnotation("org.junit.runner.RunWith", values = mapOf("value" to DecodedValue.DecodedType(value="Landroid/support/test/runner/AndroidJUnit4;")), inherited = true)
+val MEDIUM_TEST_ANNOTATION_QUALIFIED = TestAnnotation("androidx.test.filters.MediumTest", values = mapOf(), inherited = false)
+val METADATA_ANNOTATION_QUALIFIED = TestAnnotation("kotlin.Metadata", values = mapOf(), inherited = false)
+val FLAKY_TEST_ANNOTATION_QUALIFIED = TestAnnotation("androidx.test.filters.FlakyTest", values = mapOf(), inherited = false)
+val IGNORE_TEST_ANNOTATION_QUALIFIED = TestAnnotation("org.junit.Ignore", values = mapOf(), inherited = false)
 
 fun createTestMethodsList(size: Int): MutableList<TestMethod> {
     return MutableList(size) { TestMethod("test#somemethod", listOf(TestAnnotation("org.junit.Test", values = mapOf(), inherited = false))) }

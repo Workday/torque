@@ -35,29 +35,29 @@ class ModuleTestParserSpec : Spek(
 		}
 	}
 
-	context("parse tests with different test annotations") {
+	context("parse tests with different qualified test annotations") {
 		val noAnnotationsTest = TestMethod("com.company.mymodule.test#testNoAnnotations",
-				listOf(TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val ignoredTest = TestMethod("com.company.mymodule.test#testIgnored",
-				listOf(IGNORE_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(IGNORE_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val mediumTest = TestMethod("com.company.mymodule.test#testMediumTest",
-				listOf(MEDIUM_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val flakyMediumTest = TestMethod("com.company.mymodule.test#testMultiAnnotations",
-				listOf(MEDIUM_TEST_ANNOTATION,
-						FLAKY_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						FLAKY_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val ignoredFlakyMediumTest = TestMethod("com.company.mymodule.test#testPositiveNegativeAnnotations",
-				listOf(IGNORE_TEST_ANNOTATION,
-						MEDIUM_TEST_ANNOTATION,
-						FLAKY_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(IGNORE_TEST_ANNOTATION_QUALIFIED,
+						MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						FLAKY_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val testMethods = listOf(
 				noAnnotationsTest,
 				ignoredTest,
@@ -77,7 +77,112 @@ class ModuleTestParserSpec : Spek(
 		val testApkPath = "some_path"
 		val testModuleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, targetApkPath))
 
-		given("no Annotations and with default Ignore NotAnnotations") {
+		given("no Annotations and with default org.junit.Ignore Excluded Annotations") {
+			val args = Args().apply {
+				testApkPaths = listOf(testApkPath)
+				appApkPath = targetApkPath
+			}
+
+			it("filters out org.junit.Ignored tests only") {
+				val expectedTestMethods = listOf(
+						noAnnotationsTest,
+						mediumTest,
+						flakyMediumTest)
+				val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
+				val actualTestModules = ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()
+				assertTestModules(expectedTestModules, actualTestModules)
+			}
+		}
+
+		given("androidx.test.filters.MediumTest Annotations and with default Ignore Excluded Annotations") {
+			val args = Args().apply {
+				testApkPaths = listOf(testApkPath)
+				appApkPath = targetApkPath
+				includedAnnotations = listOf("androidx.test.filters.MediumTest")
+			}
+
+			it("filters to androidx.test.filters.MediumTest only") {
+				val expectedTestMethods = listOf(mediumTest, flakyMediumTest)
+				val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
+				val actualTestModules = ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()
+				assertTestModules(expectedTestModules, actualTestModules)
+			}
+		}
+
+		given("androidx.test.filters.MediumTest androidx.test.filters.FlakyTest Annotations and with default Ignore Excluded Annotations") {
+			val args = Args().apply {
+				testApkPaths = listOf(testApkPath)
+				appApkPath = targetApkPath
+				includedAnnotations = listOf("androidx.test.filters.MediumTest", "androidx.test.filters.FlakyTest")
+			}
+
+			it("filters to androidx.test.filters.MediumTest androidx.test.filters.FlakyTest tests only") {
+				val expectedTestMethods = listOf(flakyMediumTest)
+				val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
+				val actualTestModules = ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()
+				assertTestModules(expectedTestModules, actualTestModules)
+			}
+		}
+
+		given("FlakyTest Excluded Annotations") {
+			val args = Args().apply {
+				testApkPaths = listOf(testApkPath)
+				appApkPath = targetApkPath
+				excludedAnnotations = listOf("androidx.test.filters.FlakyTest")
+			}
+
+			it("filters out androidx.test.filters.FlakyTest tests only") {
+				val expectedTestMethods = listOf(noAnnotationsTest, ignoredTest, mediumTest)
+				val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
+				val actualTestModules = ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()
+				assertTestModules(expectedTestModules, actualTestModules)
+			}
+		}
+	}
+
+	context("parse tests with different unqualified test annotations") {
+		val noAnnotationsTest = TestMethod("com.company.mymodule.test#testNoAnnotations",
+				listOf(TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
+		val ignoredTest = TestMethod("com.company.mymodule.test#testIgnored",
+				listOf(IGNORE_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
+		val mediumTest = TestMethod("com.company.mymodule.test#testMediumTest",
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
+		val flakyMediumTest = TestMethod("com.company.mymodule.test#testMultiAnnotations",
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						FLAKY_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
+		val ignoredFlakyMediumTest = TestMethod("com.company.mymodule.test#testPositiveNegativeAnnotations",
+				listOf(IGNORE_TEST_ANNOTATION_QUALIFIED,
+						MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						FLAKY_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
+		val testMethods = listOf(
+				noAnnotationsTest,
+				ignoredTest,
+				mediumTest,
+				flakyMediumTest,
+				ignoredFlakyMediumTest)
+		val testPackage = ApkPackage.Valid("com.company.mymodule.test")
+		val targetPackage = ApkPackage.Valid("test.test.myapplication")
+		val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
+		val apkTestParser = mockk<ApkTestParser> {
+			every { getValidatedTestPackage(any()) } returns testPackage
+			every { getValidatedTargetPackage(any()) } returns targetPackage
+			every { getValidatedTestRunner(any()) } returns testRunner
+			every { getTests(any()) } returns testMethods
+		}
+		val targetApkPath = "some_app_path"
+		val testApkPath = "some_path"
+		val testModuleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, targetApkPath))
+
+		given("no Annotations and with default Ignore Excluded Annotations") {
 			val args = Args().apply {
 				testApkPaths = listOf(testApkPath)
 				appApkPath = targetApkPath
@@ -101,7 +206,7 @@ class ModuleTestParserSpec : Spek(
 				includedAnnotations = listOf("MediumTest")
 			}
 
-			it("filters to MediumTests only") {
+			it("filters to MediumTest only") {
 				val expectedTestMethods = listOf(mediumTest, flakyMediumTest)
 				val expectedTestModules = listOf(TestModule(testModuleInfo, expectedTestMethods))
 				val actualTestModules = ModuleTestParser(args, apkTestParser).parseTestsFromModuleApks()
@@ -124,7 +229,7 @@ class ModuleTestParserSpec : Spek(
 			}
 		}
 
-		given("FlakyTest ExcludedAnnotations") {
+		given("FlakyTest Excluded Annotations") {
 			val args = Args().apply {
 				testApkPaths = listOf(testApkPath)
 				appApkPath = targetApkPath
@@ -205,21 +310,21 @@ class ModuleTestParserSpec : Spek(
 
 	context("parse tests with annotations and regex") {
 		val noAnnotationsSpecificTest = TestMethod("com.company.mymodule.SomeSpecificTest#someTest",
-				listOf(TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val mediumSpecificTest = TestMethod("com.company.mymodule.SomeSpecificTest#someTest",
-				listOf(MEDIUM_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val mediumOtherTest = TestMethod("com.company.mymodule.SomeOtherTest#someTest",
-				listOf(MEDIUM_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val flakyMediumTest = TestMethod("com.company.mymodule.SomeSpecificTest#someTest",
-				listOf(MEDIUM_TEST_ANNOTATION,
-						FLAKY_TEST_ANNOTATION,
-						TEST_ANNOTATION,
-						METADATA_ANNOTATION))
+				listOf(MEDIUM_TEST_ANNOTATION_QUALIFIED,
+						FLAKY_TEST_ANNOTATION_QUALIFIED,
+						TEST_ANNOTATION_QUALIFIED,
+						METADATA_ANNOTATION_QUALIFIED))
 		val testMethods = listOf(
 				noAnnotationsSpecificTest,
 				mediumSpecificTest,
@@ -263,9 +368,9 @@ private fun createExpectedTestModules(testApkPath: String, moduleCount: Int): Li
 	val testRunner = TestRunner.Valid("android.support.test.runner.AndroidJUnitRunner")
 	val testMethods = listOf(
 			TestMethod("test.test.myapplication.ExampleInstrumentedTest#useAppContext",
-					listOf(RUNS_WITH_ANDROID_ANNOTATION,
-							THROWS_EXCEPTION_ANNOTATION,
-							TEST_ANNOTATION)
+					listOf(RUNS_WITH_ANDROID_ANNOTATION_QUALIFIED,
+							THROWS_EXCEPTION_ANNOTATION_QUALIFIED,
+							TEST_ANNOTATION_QUALIFIED)
 			))
 	val moduleInfo = TestModuleInfo(ModuleInfo(testPackage, testApkPath), testRunner, ModuleInfo(targetPackage, ""))
 	return MutableList(moduleCount) { TestModule(moduleInfo, testMethods) }
