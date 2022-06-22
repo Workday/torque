@@ -1,10 +1,13 @@
 package com.workday.torque
 
+import com.gojuno.commander.os.log
 import com.linkedin.dex.parser.TestAnnotation
 import com.linkedin.dex.parser.TestMethod
 import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestModule
 import com.workday.torque.pooling.TestModuleInfo
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTestParser = ApkTestParser()) {
     fun parseTestsFromModuleApks(): List<TestModule> {
@@ -14,8 +17,18 @@ class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTes
                         .filterAnnotations(includedAnnotations = args.includedAnnotations, excludedAnnotations = args.excludedAnnotations)
                         .filterClassRegexes(args.testClassRegexes)
                 println("Filtered tests count: ${testMethods.size}")
+                val testApkFile = File(testApkPath)
+
+                val time = System.currentTimeMillis()
+                val expired = time + TimeUnit.SECONDS.toMillis(5)
+                while((!testApkFile.exists() || testApkFile.length() < 1024) && System.currentTimeMillis() < expired) {
+                    Thread.sleep(1000)
+                }
                 val moduleInfo = createModuleInfo(testApkPath)
-                add(TestModule(moduleInfo, testMethods))
+                val isMyModule = moduleInfo.moduleInfo.pathToApk.contains(other = "-DEBUG.apk", ignoreCase = false)
+                if (!isMyModule) {
+                    add(TestModule(moduleInfo, testMethods))
+                }
             }
         }
     }

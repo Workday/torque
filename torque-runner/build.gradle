@@ -10,6 +10,7 @@ dependencies {
 
 
 jar {
+    entryCompression = ZipEntryCompression.STORED
     // Build jar with dependencies.
     from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude 'META-INF/*.SF'

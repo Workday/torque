@@ -97,10 +97,11 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
                 .fromCallable { System.currentTimeMillis() }
                 .flatMap { startTimeMillis -> adbInstallApk(pathToApk, installTimeout).map { it to startTimeMillis } }
                 .map { (exitNotification, startTimeMillis) ->
-                    val success = exitNotification
-                            .preprocessOutput()
-                            .filter { it.isNotEmpty() }
-                            .firstOrNull { it.equals("Success", ignoreCase = true) } != null
+                    val preProcessed = exitNotification
+                        .preprocessOutput()
+                        .filter { it.isNotEmpty() }
+                        .firstOrNull { it.equals("Success", ignoreCase = true) }
+                    val success = preProcessed != null
 
                     val duration = System.currentTimeMillis() - startTimeMillis
 
@@ -124,15 +125,16 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
         return processRunner.runAdb(
                 commandAndArgs = listOf("-s", adbDevice.id, "install", "-r", "-g", pathToApk),
                 timeout = installTimeout,
-                unbufferedOutput = true)
+                unbufferedOutput = true,
+                keepOutputOnExit = true)
                 .ofType(Notification.Exit::class.java)
     }
 
     private fun Notification.Exit.preprocessOutput(): List<String> {
         return output
-                .readText()
-                .split(System.lineSeparator())
-                .map { it.trim() }
+            .readText()
+            .split(System.lineSeparator())
+            .map { it.trim() }
     }
 }
 
