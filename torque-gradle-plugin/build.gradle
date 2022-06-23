@@ -12,6 +12,7 @@ dependencies {
 }
 
 jar {
+    entryCompression = ZipEntryCompression.STORED
     manifest {
         attributes 'Implementation-Title': POM_NAME,
                 'Built-Date': new Date(),
