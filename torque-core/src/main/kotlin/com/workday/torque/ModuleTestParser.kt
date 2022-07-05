@@ -9,14 +9,16 @@ import com.workday.torque.pooling.TestModuleInfo
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTestParser = ApkTestParser()) {
+class ModuleTestParser(private val args: Args, private val apkTestParser: ApkTestParser = ApkTestParser(args.verboseOutput)) {
     fun parseTestsFromModuleApks(): List<TestModule> {
         return args.testApkPaths.fold(mutableListOf()) { accumulatedModules, testApkPath ->
             accumulatedModules.apply {
                 val testMethods = apkTestParser.getTests(testApkPath)
                         .filterAnnotations(includedAnnotations = args.includedAnnotations, excludedAnnotations = args.excludedAnnotations)
                         .filterClassRegexes(args.testClassRegexes)
-                println("Filtered tests count: ${testMethods.size}")
+                if (args.verboseOutput) {
+                    log("Filtered tests count: ${testMethods.size}")
+                }
                 val testApkFile = File(testApkPath)
 
                 val time = System.currentTimeMillis()
