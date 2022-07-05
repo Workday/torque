@@ -15,9 +15,11 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
+import java.nio.file.Paths
 
 class TestRunFactorySpec : Spek(
 {
+    val workingDirectory = Paths.get("./").toAbsolutePath().toString()
     context("Run test chunk") {
         val adbDevice = AdbDevice("id", "model", online = true)
         val logcatFileIO = mockk<LogcatFileIO>(relaxed = true)
@@ -52,7 +54,7 @@ class TestRunFactorySpec : Spek(
                 val args = Args().apply {
                     appApkPath = "somePath"
                 }
-                TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
+                TestRunFactory(workingDirectory).runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
                         .test()
                         .await()
 
@@ -80,7 +82,7 @@ class TestRunFactorySpec : Spek(
                         testFilesPullDeviceDirectory = "somePath"
                         testFilesPullHostDirectory = "somePath"
                     }
-                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
+                    TestRunFactory(workingDirectory).runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
                             .test()
                             .await()
 
@@ -96,7 +98,7 @@ class TestRunFactorySpec : Spek(
                         appApkPath = "somePath"
                     }
 
-                    TestRunFactory().runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
+                    TestRunFactory(workingDirectory).runTestSession(adbDevice, args, testPool, logcatFileIO, logcatRecorder, installer, filePuller, testChunkRunner, chunkRetryer)
                             .test()
                             .await()
 
