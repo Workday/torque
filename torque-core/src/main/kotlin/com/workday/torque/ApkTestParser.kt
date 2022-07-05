@@ -2,13 +2,14 @@ package com.workday.torque
 
 import com.gojuno.commander.android.androidHome
 import com.gojuno.commander.os.Notification
+import com.gojuno.commander.os.log
 import com.gojuno.commander.os.process
 import com.linkedin.dex.parser.DexParser
 import com.linkedin.dex.parser.TestMethod
 import java.io.File
-import java.util.*
+import java.util.concurrent.TimeUnit
 
-class ApkTestParser {
+class ApkTestParser(private val verboseOutput: Boolean = false) {
     fun getValidatedTestPackage(testApkPath: String): ApkPackage.Valid {
         return parseTestPackage(testApkPath).validateApkPackage()
     }
@@ -20,57 +21,50 @@ class ApkTestParser {
             .lastOrNull()
             ?.absolutePath
     }
-    val aapt: String by lazy { buildTools?.let { "$buildTools/aapt2" } ?: "" }
+    private val aapt: String by lazy { buildTools?.let { "$buildTools/aapt2" } ?: "" }
 
     private fun parseTestPackage(testApkPath: String): ApkPackage {
-        val commandAndArgs = listOf(
-            aapt, "dump", "badging", testApkPath
-        )
         return process(
-                commandAndArgs = commandAndArgs,
-                unbufferedOutput = true,
+            print = verboseOutput,
+            commandAndArgs = listOf(
+                aapt, "dump", "badging", testApkPath
+            ),
+            unbufferedOutput = false, // Note: flipping this flag may cause strange errors, due to OS-specific buffer flushing
         )
-                .ofType(Notification.Exit::class.java)
-                .map { (output) ->
-                    val unTouched = output
-                        .readText()
-                    val packageText = unTouched
-                        .split(System.lineSeparator())
-                        .firstOrNull { it.contains("package") }
+            .ofType(Notification.Exit::class.java)
+            .map { (output) ->
+                val rawOutput = output
+                    .readText()
+                val packageText = rawOutput
+                    .split(System.lineSeparator())
+                    .firstOrNull { it.contains("package") }
 
-                    if (packageText.isNullOrEmpty()) {
-                        return@map ApkPackage.ParseError("'package' token was null")
+                if (packageText.isNullOrEmpty()) {
+                    if (verboseOutput) {
+                        log("parseTestPackage, raw output: $rawOutput")
                     }
-                    val splitPackageText = packageText
-                        ?.split(" ")
-                    val name = splitPackageText
-                        ?.firstOrNull { it.startsWith("name=") }
+                    return@map ApkPackage.ParseError("parseTestPackage, 'package' token was null")
+                }
+                val name = packageText
+                    .split(" ")
+                    .firstOrNull { it.startsWith("name=") }
 
-                    if (name.isNullOrEmpty()) {
-                        return@map ApkPackage.ParseError("'name' token was null")
+                if (name.isNullOrEmpty()) {
+                    if (verboseOutput) {
+                        log("parseTestPackage, name token was null. package token: $packageText")
                     }
-
-                    name
-                            ?.split("'")
-                            ?.getOrNull(1)
-                            ?.let(ApkPackage::Valid)
-                            ?: ApkPackage.ParseError("Cannot parse test package from `aapt dump badging \$APK` output.")
+                    return@map ApkPackage.ParseError("'name' token was null")
                 }
-                .toSingle()
-                .toBlocking()
-                .value()
-    }
 
-    private fun makeOutputFile(): File {
-        return Random()
-            .nextInt()
-            .let { System.nanoTime() + it }
-            .let { name ->
-                File("$name.output").apply {
-                    createNewFile()
-                    deleteOnExit()
-                }
+                name
+                    .split("'")
+                    .getOrNull(1)
+                    ?.let(ApkPackage::Valid)
+                    ?: ApkPackage.ParseError("Cannot parse test package from `aapt2 dump badging \$APK` output.")
             }
+            .toSingle()
+            .toBlocking()
+            .value()
     }
 
     fun getValidatedTargetPackage(testApkPath: String): ApkPackage.Valid {
@@ -79,34 +73,41 @@ class ApkTestParser {
 
     private fun parseTargetPackage(testApkPath: String): ApkPackage {
         return process(
-                commandAndArgs = listOf(
-                        aapt, "dump", "xmltree", testApkPath, "--file", "AndroidManifest.xml"
-                ),
-                unbufferedOutput = true,
-                keepOutputOnExit = true,
+            print = verboseOutput,
+            commandAndArgs = listOf(
+                aapt, "dump", "xmltree", testApkPath, "--file", "AndroidManifest.xml"
+            ),
+            unbufferedOutput = false, // Note: flipping this flag may cause strange errors, due to OS-specific buffer flushing
+            keepOutputOnExit = false,
         )
-                .ofType(Notification.Exit::class.java)
-                .map { (output) ->
-                    val initialOutput = output
-                        .readText()
-                        .split(System.lineSeparator())
-                        .firstOrNull { it.contains("android:targetPackage") }
+            .ofType(Notification.Exit::class.java)
+            .map { (output) ->
+                val initialOutput = output
+                    .readText()
+                    .split(System.lineSeparator())
+                    .firstOrNull { it.contains("android:targetPackage") }
 
-                    val secondaryOutput = initialOutput
-                        ?.split(" ")
-                    val finalOutput = secondaryOutput
-                        ?.firstOrNull {
-                            it.contains("android:targetPackage")
-                        }
-                        ?.substringAfter("=")
-                        ?.trim('"')
-                    finalOutput
-                            ?.let(ApkPackage::Valid)
-                            ?: ApkPackage.ParseError("Cannot parse target package from `aapt dump xmltree ${testApkPath} AndroidManifest.xml` output.")
+                if (verboseOutput) {
+                    log("parseTargetPackage, output file path: ${output.absolutePath}")
+                    log("parseTargetPackage, initialOutput: $initialOutput")
                 }
-                .toSingle()
-                .toBlocking()
-                .value()
+
+                val finalOutput = initialOutput
+                    ?.split(" ")
+                    ?.firstOrNull { it.contains("android:targetPackage") }
+                    ?.substringAfter("=")
+                    ?.trim('"')
+
+                if (verboseOutput) {
+                    log("parseTargetPackage finalOutput: $finalOutput")
+                }
+                finalOutput
+                    ?.let(ApkPackage::Valid)
+                    ?: ApkPackage.ParseError("Cannot parse target package from `aapt dump xmltree ${testApkPath} --file AndroidManifest.xml` output.")
+            }
+            .toSingle()
+            .toBlocking()
+            .value()
     }
 
     private fun ApkPackage.validateApkPackage(): ApkPackage.Valid {
@@ -125,28 +126,48 @@ class ApkTestParser {
     }
 
     private fun parseTestRunner(testApkPath: String): TestRunner =
-            process(
-                    commandAndArgs = listOf(
-                            aapt, "dump", "xmltree", testApkPath, "--file", "AndroidManifest.xml"
-                    ),
-                    unbufferedOutput = true
-            )
-                    .ofType(Notification.Exit::class.java)
-                    .map { (output) ->
-                        output
-                                .readText()
-                                .split(System.lineSeparator())
-                                .dropWhile { !it.contains("instrumentation") }
-                                .firstOrNull { it.contains("android:name") }
-                                ?.split("\"")
-                                ?.getOrNull(1)
-                                ?.let(TestRunner::Valid)
-                                ?: TestRunner.ParseError("Cannot parse test runner from `aapt dump xmltree ${testApkPath} AndroidManifest.xml` output.")
-                    }
-                    .toSingle()
-                    .toBlocking()
-                    .value()
+        process(
+            print = verboseOutput,
+            commandAndArgs = listOf(
+                aapt, "dump", "xmltree", testApkPath, "--file", "AndroidManifest.xml"
+            ),
+            unbufferedOutput = false, // Note: flipping this flag may cause strange errors, due to OS-specific buffer flushing
+            keepOutputOnExit = false,
+        )
+            .ofType(Notification.Exit::class.java)
+            .map {
+                val expiration = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
+                Pair(it, expiration)
+            }
+            .map { it.first }
+            .map { (output) ->
+                val rawOutput = output
+                    .readText()
+                val dropWhile = rawOutput
+                    .split(System.lineSeparator())
+                    .dropWhile { !it.contains("instrumentation") }
+                val firstOrNull = dropWhile
+                    .firstOrNull { it.contains("android:name") }
 
+                if (firstOrNull.isNullOrEmpty() && verboseOutput) {
+                    log("parseTestRunner, raw output: $rawOutput")
+                }
+
+                val testRunnerText = firstOrNull
+                    ?.split("\"")
+                    ?.getOrNull(1)
+
+                if (verboseOutput) {
+                    log("parseTestRunner, identified test runner: $testRunnerText")
+                }
+
+                testRunnerText
+                    ?.let(TestRunner::Valid)
+                    ?: TestRunner.ParseError("Cannot parse test runner from `aapt dump xmltree $testApkPath --file AndroidManifest.xml` output.")
+            }
+            .toSingle()
+            .toBlocking()
+            .value()
 
 
     private fun TestRunner.validateTestRunner(): TestRunner.Valid {
@@ -163,6 +184,6 @@ class ApkTestParser {
     fun getTests(testApkPath: String) = parseTests(testApkPath)
 
     private fun parseTests(testApkPath: String): List<TestMethod> =
-            DexParser.findTestMethods(testApkPath).map { TestMethod(it.testName, it.annotations) }
+        DexParser.findTestMethods(testApkPath).map { TestMethod(it.testName, it.annotations) }
 
 }

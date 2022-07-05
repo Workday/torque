@@ -10,10 +10,11 @@ import java.util.concurrent.TimeUnit
 private const val FULL_LOGCAT_FILE_NAME = "full.logcat"
 
 class LogcatFileIO(
-        private val adbDevice: AdbDevice,
-        private val timeoutSeconds: Int,
-        outputDirPath: String,
-        private val processRunner: ProcessRunner = ProcessRunner()
+    private val adbDevice: AdbDevice,
+    private val timeoutSeconds: Int,
+    outputDirPath: String,
+    private val processRunner: ProcessRunner = ProcessRunner(),
+    private val verboseOutput: Boolean = false,
 ) {
 
     private val logsDir = File(File(outputDirPath, "logs"), adbDevice.id)
@@ -24,25 +25,31 @@ class LogcatFileIO(
     internal suspend fun redirectLogcatToFile() {
         fullLogcatFile.parentFile.mkdirs()
         clearLogcat()
-        processRunner.runAdb(commandAndArgs = listOf("-s", adbDevice.id, "logcat"),
-                             timeout = Timeout(timeoutSeconds, TimeUnit.SECONDS),
-                             redirectOutputTo = fullLogcatFile)
-                .ofType(Notification.Start::class.java)
-                .doOnError {
-                    when (it) {
-                        is InterruptedException -> Unit // Expected case, interrupt comes from System.exit(0).
-                        else -> adbDevice.log("Error during redirecting logcat to file $fullLogcatFile, error = $it")
-                    }
+        processRunner.runAdb(
+            commandAndArgs = listOf("-s", adbDevice.id, "logcat"),
+            timeout = Timeout(timeoutSeconds, TimeUnit.SECONDS),
+            redirectOutputTo = fullLogcatFile,
+            keepOutputOnExit = true
+        )
+            .ofType(Notification.Start::class.java)
+            .doOnError {
+                when (it) {
+                    is InterruptedException -> Unit // Expected case, interrupt comes from System.exit(0).
+                    else -> adbDevice.log("Error during redirecting logcat to file $fullLogcatFile, error = $it")
                 }
-                .awaitFirst()
+            }
+            .awaitFirst()
     }
 
     private suspend fun clearLogcat() {
         try {
-            processRunner.runAdb(commandAndArgs = listOf("-s", adbDevice.id, "logcat", "-c"),
-                                 timeout = Timeout(timeoutSeconds, TimeUnit.SECONDS))
-                    .ofType(Notification.Exit::class.java)
-                    .awaitFirst()
+            processRunner.runAdb(
+                commandAndArgs = listOf("-s", adbDevice.id, "logcat", "-c"),
+                timeout = Timeout(timeoutSeconds, TimeUnit.SECONDS),
+                print = verboseOutput,
+            )
+                .ofType(Notification.Exit::class.java)
+                .awaitFirst()
         } catch (e: Exception) {
             adbDevice.log("Could not clear logcat on device. $e")
         }
@@ -50,8 +57,8 @@ class LogcatFileIO(
 
     fun writeLogcatFileForTest(testLogcat: TestLogcat) {
         getLogcatFileForTest(testLogcat.testDetails)
-                .apply { parentFile.mkdirs() }
-                .writeText(testLogcat.logcat)
+            .apply { parentFile.mkdirs() }
+            .writeText(testLogcat.logcat)
     }
 
     fun getLogcatFileForTest(testDetails: TestDetails): File {

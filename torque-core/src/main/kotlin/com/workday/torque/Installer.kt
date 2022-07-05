@@ -1,6 +1,7 @@
 package com.workday.torque
 
 import com.gojuno.commander.os.Notification
+import com.gojuno.commander.os.log
 import com.workday.torque.pooling.ModuleInfo
 import com.workday.torque.pooling.TestChunk
 import com.workday.torque.pooling.TestModuleInfo
@@ -9,7 +10,11 @@ import io.reactivex.Observable
 import kotlinx.coroutines.rx2.await
 import java.util.concurrent.TimeUnit
 
-class Installer(private val adbDevice: AdbDevice, private val processRunner: ProcessRunner = ProcessRunner()) {
+class Installer(
+    private val adbDevice: AdbDevice,
+    private val processRunner: ProcessRunner = ProcessRunner(),
+    private val verboseOutput: Boolean = false,
+) {
 
     suspend fun ensureTestPackageInstalled(args: Args, testChunk: TestChunk) {
         if (isChunkApkInstalled(testChunk)) {
@@ -81,7 +86,7 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
         return processRunner.runAdb(
                 commandAndArgs = listOf("-s", adbDevice.id, "uninstall", modulePackage),
                 timeout = installTimeout,
-                unbufferedOutput = true)
+                unbufferedOutput = false)
                 .ofType(Notification.Exit::class.java)
     }
 
@@ -125,14 +130,20 @@ class Installer(private val adbDevice: AdbDevice, private val processRunner: Pro
         return processRunner.runAdb(
                 commandAndArgs = listOf("-s", adbDevice.id, "install", "-r", "-g", pathToApk),
                 timeout = installTimeout,
-                unbufferedOutput = true,
-                keepOutputOnExit = true)
-                .ofType(Notification.Exit::class.java)
+                unbufferedOutput = false, // Note: flipping this flag may cause strange errors, due to OS-specific buffer flushing
+                keepOutputOnExit = true,
+        ).ofType(Notification.Exit::class.java)
     }
 
     private fun Notification.Exit.preprocessOutput(): List<String> {
-        return output
+        val rawOutput = output
             .readText()
+
+        if (verboseOutput) {
+            log("preprocessOutput, raw/untouched output: $rawOutput")
+        }
+
+        return rawOutput
             .split(System.lineSeparator())
             .map { it.trim() }
     }
