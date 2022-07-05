@@ -9,7 +9,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.rx2.asSingle
 import kotlinx.coroutines.rx2.await
 
-class TestRunFactory {
+class TestRunFactory(private val workingDirectory: String) {
 
     fun runTestSession(
             adbDevice: AdbDevice,
@@ -18,10 +18,11 @@ class TestRunFactory {
             logcatFileIO: LogcatFileIO = LogcatFileIO(
                     adbDevice = adbDevice,
                     timeoutSeconds = args.chunkTimeoutSeconds.toInt(),
-                    outputDirPath = args.outputDirectory
+                    outputDirPath = "$workingDirectory/${args.outputDirectory}",
+                    verboseOutput = true,
             ),
             logcatRecorder: LogcatRecorder = LogcatRecorder(adbDevice, logcatFileIO),
-            installer: Installer = Installer(adbDevice),
+            installer: Installer = Installer(adbDevice = adbDevice, verboseOutput = args.verboseOutput),
             filePuller: FilePuller = FilePuller(adbDevice),
             testChunkRunner: TestChunkRunner = TestChunkRunner(args, adbDevice, logcatFileIO, installer),
             testChunkRetryer: TestChunkRetryer = TestChunkRetryer(adbDevice, args, logcatFileIO, testChunkRunner, installer)

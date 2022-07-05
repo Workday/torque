@@ -87,8 +87,11 @@ class TorquePlugin : Plugin<Project> {
 
     private fun configureTaskOptionsAndRun(torqueArgs: Args, task: TorqueRunTask) {
         torqueArgs.configureTaskOptions(task)
-        println("Starting Torque run with args: $torqueArgs")
-        Torque(torqueArgs).run()
+        if (torqueArgs.verboseOutput) {
+            println("Starting Torque run with args: $torqueArgs")
+        }
+        val rootDir = task.project.rootDir.toString()
+        Torque(args = torqueArgs, workingDirectory = rootDir).run()
     }
 
     private fun Args.configureTaskOptions(task: TorqueRunTask) {

@@ -1,14 +1,16 @@
 package com.workday.torque
 
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 private val PARAMETER_HELP_NAMES = setOf("--help", "-help", "help", "-h")
 
 fun main(rawArgs: Array<String>) {
+    val currentDirectoryPath = Paths.get("./").toAbsolutePath()
     val args = parseProcessArgs(rawArgs)
-    Torque(args).run()
+    Torque(args = args, workingDirectory = currentDirectoryPath.toString()).run()
 
-    System.exit(0)
+    exitProcess(0)
 }
 
 private fun parseProcessArgs(rawArgs: Array<String>): Args {

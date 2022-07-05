@@ -1,13 +1,12 @@
 package com.workday.torque
 
-import com.gojuno.commander.android.connectedAdbDevices
 import com.gojuno.commander.os.log
 import io.reactivex.Single
 
 class AdbDeviceFinder {
 
     fun onlineAdbDevices(): Single<List<AdbDevice>> {
-        return connectedAdbDevices()
+        return connectedAdbDevices(unbufferedOutput = false)
                 .toSingle()
                 .toV2Single()
                 .map {

@@ -8,10 +8,13 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
+import java.nio.file.Paths
 import kotlin.test.assertFailsWith
 
 class TorqueSpec : Spek (
 {
+    val currentDir = Paths.get("./").toAbsolutePath().toString()
+
     context("Run Torque") {
         val args = Args()
         val moduleTestParser = mockk<ModuleTestParser> {
@@ -31,7 +34,7 @@ class TorqueSpec : Spek (
         val resultWriter = mockk<ResultWriter>(relaxed = true)
 
         given("completed test sessions") {
-            val torque = Torque(args, moduleTestParser, adbDeviceFinder, testRunFactory, resultWriter)
+            val torque = Torque(args, currentDir, moduleTestParser, adbDeviceFinder, testRunFactory, resultWriter,)
             it("Parses tests from apks and starts TestRuns on connectedDevices and writes the results") {
                 torque.run()
 
@@ -50,7 +53,7 @@ class TorqueSpec : Spek (
             val failedModuleTestParser = mockk<ModuleTestParser> {
                 every { parseTestsFromModuleApks() } throws IllegalStateException("apk parse error")
             }
-            val torque = Torque(args, failedModuleTestParser, adbDeviceFinder, testRunFactory, resultWriter)
+            val torque = Torque(args, currentDir, failedModuleTestParser, adbDeviceFinder, testRunFactory, resultWriter,)
             it("passes that exception to the caller") {
                 assertFailsWith(IllegalStateException::class, "apk parse error") {
                     torque.run()
@@ -62,7 +65,7 @@ class TorqueSpec : Spek (
             val failedAdbDeviceFinder = mockk<AdbDeviceFinder> {
                 every { onlineAdbDevices() } throws IllegalStateException("Error: No devices available for tests.")
             }
-            val torque = Torque(args, moduleTestParser, failedAdbDeviceFinder, testRunFactory, resultWriter)
+            val torque = Torque(args, currentDir, moduleTestParser, failedAdbDeviceFinder, testRunFactory, resultWriter,)
             it("passes that exception to the caller") {
                 assertFailsWith(IllegalStateException::class, "Error: No devices available for tests.") {
                     torque.run()
@@ -74,7 +77,7 @@ class TorqueSpec : Spek (
             val failedResultWriter = mockk<ResultWriter>(relaxed = true) {
                 every { write(any(), any()) } throws IllegalStateException("Error: 0 tests were run.")
             }
-            val torque = Torque(args, moduleTestParser, adbDeviceFinder, testRunFactory, failedResultWriter)
+            val torque = Torque(args, currentDir, moduleTestParser, adbDeviceFinder, testRunFactory, failedResultWriter,)
             it("passes that exception to the caller") {
                 assertFailsWith(IllegalStateException::class, "Error: 0 tests were run.") {
                     torque.run()

@@ -6,11 +6,14 @@ import io.reactivex.Single
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-class Torque(private val args: Args,
-             private val moduleTestParser: ModuleTestParser = ModuleTestParser(args),
-             private val adbDeviceFinder: AdbDeviceFinder = AdbDeviceFinder(),
-             private val testRunFactory: TestRunFactory = TestRunFactory(),
-             private val resultWriter: ResultWriter = ResultWriter(args)) {
+class Torque(
+    private val args: Args,
+    private val workingDirectory: String,
+    private val moduleTestParser: ModuleTestParser = ModuleTestParser(args),
+    private val adbDeviceFinder: AdbDeviceFinder = AdbDeviceFinder(),
+    private val testRunFactory: TestRunFactory = TestRunFactory(workingDirectory),
+    private val resultWriter: ResultWriter = ResultWriter(args, workingDirectory),
+) {
 
     fun run() {
         val startTime = System.currentTimeMillis()

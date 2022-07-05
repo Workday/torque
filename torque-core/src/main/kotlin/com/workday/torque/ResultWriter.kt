@@ -6,18 +6,21 @@ import com.workday.torque.html.writeHtmlReport
 import java.io.File
 import java.util.Date
 
-class ResultWriter(val args: Args) {
+class ResultWriter(args: Args, workingDirectory: String) {
+
+    private val outputDirectory = "$workingDirectory/${args.outputDirectory}"
+    private val resultFilePath = "$workingDirectory/${args.resultFilePath}"
 
     fun clearOutputDirectory() {
-        File(args.outputDirectory).deleteRecursively()
+        File(outputDirectory).deleteRecursively()
     }
 
     fun write(startTime: Long,  adbDeviceTestSessions: List<AdbDeviceTestSession>) {
-        adbDeviceTestSessions.writeCiResultToOutputFile(args.resultFilePath)
+        adbDeviceTestSessions.writeCiResultToOutputFile(resultFilePath)
         val suites = adbDeviceTestSessions.toSuites()
         suites.run {
-            generateHtmlReport(args.outputDirectory)
-            generateJunit4Report(args.outputDirectory)
+            generateHtmlReport(outputDirectory)
+            generateJunit4Report(outputDirectory)
             printFinalResult(startTime)
         }
     }
